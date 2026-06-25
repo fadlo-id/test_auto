@@ -25,7 +25,7 @@ export default function Index({ packages, features, success, error }) {
                 </div>}
 
                 <div
-                    className="bg-white mt-2 dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg relative"
+                    className="bg-white mt-2 overflow-hidden shadow-sm sm:rounded-lg relative"
                 >
                     <div
                         className="flex flex-col gap-3 items-center p-4"

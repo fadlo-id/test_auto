@@ -2,24 +2,21 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Observers\UserObserver;
+use App\Models\AutoSchool;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[ObservedBy(UserObserver::class)]
-
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Champs autorisés
      */
     protected $fillable = [
         'name',
@@ -33,9 +30,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Champs cachés
      */
     protected $hidden = [
         'password',
@@ -43,9 +38,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Casts
      */
     protected function casts(): array
     {
@@ -55,10 +48,38 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Relation : User → AutoSchools
+     * (1 user peut créer plusieurs auto-écoles)
+     */
+    public function autoSchools()
+    {
+        return $this->hasMany(AutoSchool::class);
+    }
+
+    /**
+     * Déduire les crédits utilisateur
+     */
     public function decreaseCredits(int $credits): self
     {
         $this->available_credits -= $credits;
         $this->save();
+
         return $this;
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function usedFeatures()
+    {
+        return $this->hasMany(UsedFeature::class);
     }
 }
