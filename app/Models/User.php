@@ -2,84 +2,80 @@
 
 namespace App\Models;
 
-use App\Observers\UserObserver;
-use App\Models\AutoSchool;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[ObservedBy(UserObserver::class)]
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Champs autorisés
-     */
+    const ROLE_ADMIN = 'admin';
+    const ROLE_SCHOOL_OWNER = 'school_owner';
+    const ROLE_USER = 'user';
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'phone',
-        'image',
-        'available_credits',
-        'status',
-        'is_admin',
+        'role',
+        'is_active',
     ];
 
-    /**
-     * Champs cachés
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Casts
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+    ];
+
+    // Relations
+    public function autoSchool(): HasOne
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasOne(AutoSchool::class);
     }
 
-    /**
-     * Relation : User → AutoSchools
-     * (1 user peut créer plusieurs auto-écoles)
-     */
-    public function autoSchools()
-    {
-        return $this->hasMany(AutoSchool::class);
-    }
-
-    /**
-     * Déduire les crédits utilisateur
-     */
-    public function decreaseCredits(int $credits): self
-    {
-        $this->available_credits -= $credits;
-        $this->save();
-
-        return $this;
-    }
-
-    public function reviews()
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
-    public function transactions()
+    // Vérificateurs de rôles
+    public function isAdmin(): bool
     {
-        return $this->hasMany(Transaction::class);
+        return $this->role === self::ROLE_ADMIN;
     }
 
-    public function usedFeatures()
+    public function isSchoolOwner(): bool
     {
-        return $this->hasMany(UsedFeature::class);
+        return $this->role === self::ROLE_SCHOOL_OWNER;
+    }
+
+    public function isUser(): bool
+    {
+        return $this->role === self::ROLE_USER;
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByRole($query, string $role)
+    {
+        return $query->where('role', $role);
     }
 }

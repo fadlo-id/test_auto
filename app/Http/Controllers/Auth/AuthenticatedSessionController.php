@@ -33,7 +33,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Redirection selon le rôle
+        return redirect()->intended($this->redirectByRole());
     }
 
     /**
@@ -44,9 +45,26 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Rediriger selon le rôle de l'utilisateur
+     */
+    protected function redirectByRole(): string
+    {
+        $user = Auth::user();
+        
+        if ($user->role === 'admin') {
+            return route('admin.dashboard');
+        }
+        
+        if ($user->role === 'school_owner') {
+            return route('school.dashboard');
+        }
+        
+        return route('dashboard');
     }
 }
