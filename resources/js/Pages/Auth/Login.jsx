@@ -5,9 +5,11 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
+    const { flash } = usePage().props;
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -22,20 +24,35 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
-
         post(route('login'));
     };
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title="Connexion" />
 
-            {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                    Accédez à votre espace auto-école
+                </p>
+            </div>
 
-            <form onSubmit={submit}>
+            {status && (
+                <div className="mb-4 p-3 rounded-lg bg-green-50 text-sm text-green-700 border border-green-200">
+                    {status}
+                </div>
+            )}
+
+            {flash?.error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-50 text-sm text-red-700 border border-red-200">
+                    {flash.error}
+                </div>
+            )}
+
+            <form onSubmit={submit} className="space-y-4">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
+                    <InputLabel htmlFor="email" value="Adresse email" />
                     <TextInput
                         id="email"
                         type="email"
@@ -45,14 +62,23 @@ export default function Login({ status, canResetPassword }) {
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
+                        placeholder="votre@email.com"
                     />
-
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
+                <div>
+                    <div className="flex items-center justify-between">
+                        <InputLabel htmlFor="password" value="Mot de passe" />
+                        {canResetPassword && (
+                            <Link
+                                href={route('password.request')}
+                                className="text-sm text-orange-600 hover:text-orange-700"
+                            >
+                                Mot de passe oublié ?
+                            </Link>
+                        )}
+                    </div>
                     <TextInput
                         id="password"
                         type="password"
@@ -62,35 +88,31 @@ export default function Login({ status, canResetPassword }) {
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="block mt-4">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) => setData('remember', e.target.checked)}
-                        />
-                        <span className="ms-2 text-sm text-gray-600">Remember me</span>
-                    </label>
+                <div className="flex items-center">
+                    <Checkbox
+                        name="remember"
+                        checked={data.remember}
+                        onChange={(e) => setData('remember', e.target.checked)}
+                    />
+                    <span className="ms-2 text-sm text-gray-600">Se souvenir de moi</span>
                 </div>
 
-                <div className="flex items-center justify-end mt-4">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
+                <PrimaryButton
+                    className="w-full justify-center bg-orange-600 hover:bg-orange-700"
+                    disabled={processing}
+                >
+                    {processing ? 'Connexion...' : 'Se connecter'}
+                </PrimaryButton>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                </div>
+                <p className="text-center text-sm text-gray-500">
+                    Pas encore de compte ?{' '}
+                    <Link href={route('register')} className="text-orange-600 hover:text-orange-700 font-medium">
+                        Créer un compte
+                    </Link>
+                </p>
             </form>
         </GuestLayout>
     );
