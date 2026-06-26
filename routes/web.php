@@ -4,6 +4,7 @@ use App\Http\Controllers\School\DashboardController as SchoolDashboard;
 use App\Http\Controllers\School\ReviewsController as SchoolReviews;
 use App\Http\Controllers\School\ServicesController as SchoolServices;
 use App\Http\Controllers\School\SettingsController as SchoolSettings;
+use App\Http\Controllers\School\AnalyticsController as SchoolAnalytics;
 use App\Http\Controllers\School\SubscriptionController as SchoolSubscription;
 use App\Http\Controllers\School\PaymentController as SchoolPayment;
 use App\Http\Controllers\StripeWebhookController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\UsersController as AdminUsers;
 use App\Http\Controllers\Admin\SchoolsController as AdminSchools;
 use App\Http\Controllers\Admin\ReviewsController as AdminReviews;
 use App\Http\Controllers\Admin\PaymentsController as AdminPayments;
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalytics;
 use App\Http\Controllers\Admin\SubscriptionsController as AdminSubscriptions;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ReviewController as PublicReview;
@@ -76,13 +78,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/subscriptions/{subscription}/cancel', [AdminSubscriptions::class, 'cancel'])->name('subscriptions.cancel');
 
         // Analytics
-        Route::get('/analytics', fn () => Inertia::render('Admin/Analytics'))->name('analytics');
+        Route::get('/analytics', [AdminAnalytics::class, 'index'])->name('analytics');
     });
 
     // School owner routes
     Route::middleware('school.owner')->prefix('school')->name('school.')->group(function () {
         Route::get('/dashboard', [SchoolDashboard::class, 'index'])->name('dashboard');
-        Route::get('/analytics', fn () => Inertia::render('SchoolDashboard/Analytics'))->name('analytics');
+        Route::get('/analytics', [SchoolAnalytics::class, 'index'])->name('analytics');
         Route::get('/reviews', [SchoolReviews::class, 'index'])->name('reviews');
         Route::post('/reviews/{review}/reply', [SchoolReviews::class, 'reply'])->name('reviews.reply');
         Route::delete('/reviews/{review}/reply', [SchoolReviews::class, 'deleteReply'])->name('reviews.reply.delete');

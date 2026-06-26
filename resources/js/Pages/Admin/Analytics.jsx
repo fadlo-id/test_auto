@@ -1,235 +1,134 @@
-import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import axios from 'axios';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Alert from '@/Components/Common/Alert';
+import AdminLayout from '@/Layouts/AdminLayout';
+import {
+    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 
-export default function Analytics() {
-    const [analyticsData, setAnalyticsData] = useState({
-        monthly_users: [],
-        monthly_revenue: [],
-        monthly_subscriptions: [],
-        user_growth: [],
-        school_growth: [],
-        subscription_types: [],
-        top_plans: [],
+const COLORS = ['#ea580c', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+function StatCard({ label, value, prefix = '', suffix = '' }) {
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-2xl font-bold text-gray-900">{prefix}{Number(value ?? 0).toLocaleString()}{suffix}</p>
+        </div>
+    );
+}
+
+export default function Analytics({
+    monthlyRevenue = [],
+    monthlySchools = [],
+    monthlyUsers = [],
+    cityBreakdown = [],
+    subscriptionBreakdown = [],
+    totals = {},
+}) {
+    const revenueData = monthlyRevenue.map((r) => ({
+        mois: r.month,
+        revenus: Number(r.revenue ?? 0),
+        paiements: r.count,
+    }));
+
+    const growthData = monthlyUsers.map((u) => {
+        const schools = monthlySchools.find((s) => s.month === u.month);
+        return {
+            mois: u.month,
+            utilisateurs: u.count,
+            ecoles: schools?.count ?? 0,
+        };
     });
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [dateRange, setDateRange] = useState('30');
-
-    useEffect(() => {
-        fetchAnalytics();
-    }, [dateRange]);
-
-    const fetchAnalytics = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get(`/api/v1/admin/analytics?range=${dateRange}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAnalyticsData(response.data);
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: 'Failed to load analytics data',
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const dismissAlert = () => setAlert(null);
-
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p>Loading analytics...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
-        <>
-            <Head title="Platform Analytics" />
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="px-6 py-4 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Platform Analytics</h1>
-                            <p className="text-gray-600 mt-1">Global platform statistics and trends</p>
-                        </div>
-                        <select
-                            value={dateRange}
-                            onChange={(e) => setDateRange(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="7">Last 7 Days</option>
-                            <option value="30">Last 30 Days</option>
-                            <option value="90">Last 90 Days</option>
-                            <option value="365">Last Year</option>
-                        </select>
-                    </div>
+        <AdminLayout>
+            <Head title="Analytics Admin" />
+
+            <div className="p-6">
+                <h1 className="text-xl font-bold text-gray-900 mb-6">Analytics Plateforme</h1>
+
+                {/* Totals */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <StatCard label="Revenus totaux" value={totals.revenue} prefix="" suffix=" MAD" />
+                    <StatCard label="Auto-ecoles actives" value={totals.active_schools} />
+                    <StatCard label="Abonnements actifs" value={totals.active_subs} />
+                    <StatCard label="Avis en attente" value={totals.pending_reviews} />
                 </div>
 
-                {/* Alert */}
-                {alert && <Alert type={alert.type} message={alert.message} onClose={dismissAlert} />}
-
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                    {/* Monthly Users Chart */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Monthly Users Growth</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={analyticsData.monthly_users}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="month" />
-                                <YAxis />
+                {/* Revenue chart */}
+                {revenueData.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                        <h2 className="font-semibold text-gray-900 mb-4">Revenus mensuels (MAD)</h2>
+                        <ResponsiveContainer width="100%" height={240}>
+                            <BarChart data={revenueData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                                <XAxis dataKey="mois" tick={{ fontSize: 11 }} />
+                                <YAxis tick={{ fontSize: 11 }} />
                                 <Tooltip />
                                 <Legend />
-                                <Line type="monotone" dataKey="total_users" stroke="#3b82f6" strokeWidth={2} />
-                                <Line type="monotone" dataKey="new_users" stroke="#10b981" strokeWidth={2} />
+                                <Bar dataKey="revenus" fill="#ea580c" name="Revenus (MAD)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+
+                {/* Growth chart */}
+                {growthData.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+                        <h2 className="font-semibold text-gray-900 mb-4">Croissance mensuelle</h2>
+                        <ResponsiveContainer width="100%" height={220}>
+                            <LineChart data={growthData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                                <XAxis dataKey="mois" tick={{ fontSize: 11 }} />
+                                <YAxis tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Legend />
+                                <Line type="monotone" dataKey="utilisateurs" stroke="#3b82f6" strokeWidth={2} dot={false} name="Utilisateurs" />
+                                <Line type="monotone" dataKey="ecoles" stroke="#ea580c" strokeWidth={2} dot={false} name="Auto-ecoles" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
+                )}
 
-                    {/* Monthly Revenue Chart */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Monthly Revenue</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={analyticsData.monthly_revenue}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="revenue" fill="#10b981" />
-                                <Bar dataKey="refunds" fill="#ef4444" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* City breakdown */}
+                    {cityBreakdown.length > 0 && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
+                            <h2 className="font-semibold text-gray-900 mb-4">Top villes (auto-ecoles actives)</h2>
+                            <div className="space-y-2">
+                                {cityBreakdown.map((city, i) => {
+                                    const max = cityBreakdown[0].count;
+                                    return (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <span className="text-sm text-gray-700 w-28 truncate">{city.city}</span>
+                                            <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                                <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${(city.count / max) * 100}%` }} />
+                                            </div>
+                                            <span className="text-xs text-gray-500 w-6 text-right">{city.count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
-                    {/* Growth Metrics */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* User Growth */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">User Growth</h2>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={analyticsData.user_growth}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" />
-                                    <YAxis />
+                    {/* Subscription breakdown */}
+                    {subscriptionBreakdown.length > 0 && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
+                            <h2 className="font-semibold text-gray-900 mb-4">Abonnements par plan</h2>
+                            <ResponsiveContainer width="100%" height={200}>
+                                <PieChart>
+                                    <Pie data={subscriptionBreakdown.map((s) => ({ name: s.plan, value: s.count }))}
+                                        cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                                        {subscriptionBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                    </Pie>
                                     <Tooltip />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} />
-                                </LineChart>
+                                </PieChart>
                             </ResponsiveContainer>
                         </div>
-
-                        {/* School Growth */}
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">School Growth</h2>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={analyticsData.school_growth}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="month" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="count" stroke="#f59e0b" strokeWidth={2} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* Subscription Types */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Subscription Types Distribution</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={analyticsData.subscription_types}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, value }) => `${name}: ${value}`}
-                                    outerRadius={100}
-                                    fill="#8884d8"
-                                    dataKey="count"
-                                >
-                                    {analyticsData.subscription_types.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Top Plans */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Top Subscription Plans</h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-gray-200">
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Plan Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Active Subscriptions</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Monthly Revenue</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Growth %</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {analyticsData.top_plans.map((plan, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{plan.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-700">${plan.price}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-bold">{plan.subscriptions}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-bold">${(plan.subscriptions * plan.price).toLocaleString()}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                    plan.growth >= 0
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {plan.growth > 0 ? '+' : ''}{plan.growth}%
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Monthly Subscriptions */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Monthly Subscriptions Trend</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={analyticsData.monthly_subscriptions}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="new" fill="#10b981" name="New Subscriptions" />
-                                <Bar dataKey="cancelled" fill="#ef4444" name="Cancelled" />
-                                <Bar dataKey="total" fill="#3b82f6" name="Total Active" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    )}
                 </div>
             </div>
-        </>
+        </AdminLayout>
     );
 }
