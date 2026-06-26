@@ -11,14 +11,19 @@ use App\Http\Controllers\Admin\SchoolsController as AdminSchools;
 use App\Http\Controllers\Admin\ReviewsController as AdminReviews;
 use App\Http\Controllers\Admin\PaymentsController as AdminPayments;
 use App\Http\Controllers\Admin\SubscriptionsController as AdminSubscriptions;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\ReviewController as PublicReview;
+use App\Http\Controllers\Public\SearchController;
+use App\Http\Controllers\Public\SchoolDetailController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Routes publiques
-Route::get('/', fn () => Inertia::render('HomePage'))->name('home');
-Route::get('/search', fn () => Inertia::render('SearchPage'))->name('search');
-Route::get('/auto-ecole/{slug}', fn () => Inertia::render('DetailPage'))->name('school.detail');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/auto-ecole/{slug}', [SchoolDetailController::class, 'show'])->name('school.detail');
+Route::post('/auto-ecole/{slug}/review', [PublicReview::class, 'store'])->middleware('auth')->name('school.detail.review');
 
 // Routes authentifiées
 Route::middleware(['auth', 'verified'])->group(function () {
