@@ -1,31 +1,65 @@
-import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import OverviewCards from '@/Components/Dashboard/OverviewCards';
+import AnalyticsCharts from '@/Components/Dashboard/AnalyticsCharts';
+import ProfileEditor from '@/Components/Dashboard/ProfileEditor';
+import MediaUpload from '@/Components/Dashboard/MediaUpload';
+import ServicesManager from '@/Components/Dashboard/ServicesManager';
+import Tabs from '@/Components/Common/Tabs';
+import Alert from '@/Components/Common/Alert';
 
 export default function DashboardPage({ auth, school, plans }) {
-    const { data, setData, put, processing } = useForm({
-        name: school?.name || '',
-        email: school?.email || '',
-        phone: school?.phone || '',
-        address: school?.address || '',
-        city: school?.city || '',
-        description: school?.description || '',
-    });
+    const { props } = usePage();
+    const [activeTab, setActiveTab] = useState('overview');
+    const [dashboardData, setDashboardData] = useState(school);
+    const [loading, setLoading] = useState(false);
+    const [alert, setAlert] = useState(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const handleUpdate = (e) => {
-        e.preventDefault();
-        put(`/api/v1/auto-schools/${school.id}`, {
-            onSuccess: () => alert('Mise à jour réussie!')
-        });
+    useEffect(() => {
+        fetchDashboardData();
+    }, [refreshTrigger]);
+
+    const fetchDashboardData = async () => {
+        if (!school) return;
+        setLoading(true);
+        try {
+            const response = await axios.get(`/api/v1/school/dashboard/${school.id}`);
+            setDashboardData(response.data);
+        } catch (error) {
+            showAlert('Error loading dashboard data', 'error');
+            console.error('Dashboard error:', error);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const showAlert = (message, type = 'success') => {
+        setAlert({ message, type });
+        setTimeout(() => setAlert(null), 5000);
+    };
+
+    const handleRefresh = () => {
+        setRefreshTrigger(prev => prev + 1);
+    };
+
+    const tabs = [
+        { id: 'overview', label: 'Overview', icon: '📊' },
+        { id: 'profile', label: 'Profile', icon: '👤' },
+        { id: 'media', label: 'Media', icon: '🖼️' },
+        { id: 'services', label: 'Services', icon: '🔧' },
+        { id: 'analytics', label: 'Analytics', icon: '📈' },
+    ];
 
     if (!school) {
         return (
             <>
-                <Head title="Tableau de bord" />
+                <Head title="Dashboard" />
                 <div className="min-h-screen bg-gray-50 py-12">
                     <div className="container mx-auto px-4">
-                        <h1 className="text-4xl font-bold mb-8">Tableau de bord</h1>
-                        <p className="text-gray-600">Vous n'avez pas encore d'auto-école. <a href="/register-school" className="text-blue-600 font-bold">Créez-en une maintenant.</a></p>
+                        <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
+                        <p className="text-gray-600">You don't have a school yet. <a href="/register-school" className="text-blue-600 font-bold">Create one now.</a></p>
                     </div>
                 </div>
             </>
@@ -34,159 +68,139 @@ export default function DashboardPage({ auth, school, plans }) {
 
     return (
         <>
-            <Head title="Tableau de bord" />
-            
-            <div className="min-h-screen bg-gray-50 py-12">
-                <div className="container mx-auto px-4">
-                    <h1 className="text-4xl font-bold mb-8">Tableau de bord - {school.name}</h1>
+            <Head title="School Dashboard" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {/* Stats */}
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-bold mb-2">Vues</h3>
-
-                            <p className="text-4xl font-bold text-blue-600">
-                                {school.views_count ?? 0}
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-bold mb-2">Clics</h3>
-
-                            <p className="text-4xl font-bold text-green-600">
-                                {school.clicks_count ?? 0}
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-bold mb-2">Avis</h3>
-                            <p className="text-4xl font-bold text-blue-600">{school.review_count}</p>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-bold mb-2">
-                                Note Moyenne
-                            </h3>
-
-                            <p className="text-4xl font-bold text-yellow-500">
-                                {school.reviews_avg_rating
-                                    ? Number(school.reviews_avg_rating).toFixed(1)
-                                    : 0}
-                                ⭐
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h3 className="text-lg font-bold mb-2">Inscription</h3>
-                            <p className="text-4xl font-bold text-blue-600">{school.subscription?.plan?.name || 'Gratuit'}</p>
+            <div className="min-h-screen bg-gray-50">
+                {/* Header */}
+                <div className="bg-white border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">{school.name}</h1>
+                                <p className="text-gray-600 mt-2">Manage your school profile and analytics</p>
+                            </div>
+                            <button
+                                onClick={handleRefresh}
+                                disabled={loading}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                            >
+                                ↻ Refresh
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                        {/* Edit School Form */}
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h2 className="text-2xl font-bold mb-6">Modifier les informations</h2>
-                            
-                            <form onSubmit={handleUpdate} className="space-y-4">
-                                <div>
-                                    <label className="block font-bold mb-2">Nom</label>
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
+                {/* Alert */}
+                {alert && (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                        <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
+                    </div>
+                )}
 
-                                <div>
-                                    <label className="block font-bold mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
+                {/* Main Content */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Tabs */}
+                    <Tabs
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onChange={setActiveTab}
+                        className="mb-8"
+                    />
 
-                                <div>
-                                    <label className="block font-bold mb-2">Téléphone</label>
-                                    <input
-                                        type="tel"
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-bold mb-2">Adresse</label>
-                                    <input
-                                        type="text"
-                                        value={data.address}
-                                        onChange={(e) => setData('address', e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-bold mb-2">Ville</label>
-                                    <input
-                                        type="text"
-                                        value={data.city}
-                                        onChange={(e) => setData('city', e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-bold mb-2">Description</label>
-                                    <textarea
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        rows="4"
-                                        className="w-full px-4 py-2 border rounded-lg"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 disabled:bg-gray-400"
-                                >
-                                    {processing ? 'Mise à jour...' : 'Mettre à jour'}
-                                </button>
-                            </form>
-                        </div>
-
-                        {/* Subscription Panel */}
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                            <h2 className="text-2xl font-bold mb-6">Abonnement</h2>
-                            
-                            <div className="space-y-4">
-                                <div className="border rounded-lg p-4">
-                                    <p className="text-gray-600 text-sm">Plan actuel</p>
-                                    <p className="text-2xl font-bold">{school.subscription?.plan?.name || 'Gratuit'}</p>
-                                    {school.subscription && (
-                                        <p className="text-gray-600 text-sm mt-2">
-                                            Expire le: {new Date(school.subscription.expires_at).toLocaleDateString('fr-FR')}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <h3 className="font-bold mt-6 mb-3">Disponibles:</h3>
-                                <div className="space-y-3">
-                                    {plans.map(plan => (
-                                        <button
-                                            key={plan.id}
-                                            className="w-full border rounded-lg p-4 hover:bg-blue-50 text-left"
-                                        >
-                                            <p className="font-bold">{plan.name}</p>
-                                            <p className="text-blue-600 font-bold">{plan.price} DH/mois</p>
-                                        </button>
-                                    ))}
-                                </div>
+                    {/* Tab Content */}
+                    <div className="bg-white rounded-lg shadow">
+                        {loading && (
+                            <div className="flex items-center justify-center p-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                             </div>
-                        </div>
+                        )}
+
+                        {!loading && (
+                            <>
+                                {/* Overview Tab */}
+                                {activeTab === 'overview' && dashboardData && (
+                                    <div className="p-6 space-y-6">
+                                        <OverviewCards data={dashboardData} />
+                                        
+                                        {/* Quick Stats */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+                                                <p className="text-gray-600 text-sm font-medium">Subscription Status</p>
+                                                <p className="text-2xl font-bold text-gray-900 mt-2">
+                                                    {dashboardData.subscription?.plan?.name || 'No Active Plan'}
+                                                </p>
+                                                {dashboardData.subscription?.ends_at && (
+                                                    <p className="text-xs text-gray-600 mt-2">
+                                                        Expires: {new Date(dashboardData.subscription.ends_at).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
+                                                <p className="text-gray-600 text-sm font-medium">Verification Status</p>
+                                                <div className="flex items-center mt-2">
+                                                    <span className={`text-2xl font-bold ${dashboardData.is_verified ? 'text-green-600' : 'text-yellow-600'}`}>
+                                                        {dashboardData.is_verified ? '✓ Verified' : '⊙ Pending'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
+                                                <p className="text-gray-600 text-sm font-medium">Active Listings</p>
+                                                <p className="text-2xl font-bold text-gray-900 mt-2">
+                                                    {dashboardData.services_count || 0}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Profile Tab */}
+                                {activeTab === 'profile' && dashboardData && (
+                                    <ProfileEditor
+                                        school={dashboardData}
+                                        onSuccess={() => {
+                                            showAlert('Profile updated successfully!', 'success');
+                                            handleRefresh();
+                                        }}
+                                        onError={(msg) => showAlert(msg, 'error')}
+                                    />
+                                )}
+
+                                {/* Media Tab */}
+                                {activeTab === 'media' && dashboardData && (
+                                    <MediaUpload
+                                        school={dashboardData}
+                                        onSuccess={() => {
+                                            showAlert('Media uploaded successfully!', 'success');
+                                            handleRefresh();
+                                        }}
+                                        onError={(msg) => showAlert(msg, 'error')}
+                                    />
+                                )}
+
+                                {/* Services Tab */}
+                                {activeTab === 'services' && dashboardData && (
+                                    <ServicesManager
+                                        schoolId={dashboardData.id}
+                                        services={dashboardData.services || []}
+                                        onSuccess={() => {
+                                            showAlert('Services updated successfully!', 'success');
+                                            handleRefresh();
+                                        }}
+                                        onError={(msg) => showAlert(msg, 'error')}
+                                    />
+                                )}
+
+                                {/* Analytics Tab */}
+                                {activeTab === 'analytics' && dashboardData && (
+                                    <AnalyticsCharts
+                                        school={dashboardData}
+                                        analytics={dashboardData.analytics}
+                                    />
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
