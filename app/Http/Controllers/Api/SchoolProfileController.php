@@ -4,37 +4,28 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSchoolProfileRequest;
+use App\Http\Resources\AutoSchoolResource;
 use App\Models\AutoSchool;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SchoolProfileController extends Controller
 {
-    /**
-     * Update school profile
-     * PUT /api/v1/school/{id}/profile
-     */
-    public function update(UpdateSchoolProfileRequest $request, $id)
+    public function update(UpdateSchoolProfileRequest $request, int $id): AutoSchoolResource|JsonResponse
     {
         $school = AutoSchool::findOrFail($id);
 
-        // Check authorization
-        if (auth()->user()->id !== $school->user_id && !auth()->user()->isAdmin()) {
+        if (auth()->id() !== $school->user_id && ! auth()->user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $school->update($request->validated());
 
-        return response()->json([
-            'message' => 'Profile updated successfully',
-            'data' => $school,
-        ]);
+        return new AutoSchoolResource($school->fresh());
     }
 
-    /**
-     * Upload logo
-     * POST /api/v1/school/{id}/upload-logo
-     */
-    public function uploadLogo(Request $request, $id)
+    public function uploadLogo(Request $request, int $id): JsonResponse
     {
         $request->validate([
             'logo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
@@ -42,31 +33,21 @@ class SchoolProfileController extends Controller
 
         $school = AutoSchool::findOrFail($id);
 
-        // Check authorization
-        if (auth()->user()->id !== $school->user_id && !auth()->user()->isAdmin()) {
+        if (auth()->id() !== $school->user_id && ! auth()->user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Delete old logo
-        if ($school->logo) {
-            \Storage::disk('public')->delete($school->logo);
+        if ($school->logo_url) {
+            Storage::disk('public')->delete($school->logo_url);
         }
 
-        // Store new logo
         $path = $request->file('logo')->store('schools/logos', 'public');
-        $school->update(['logo' => $path]);
+        $school->update(['logo_url' => $path]);
 
-        return response()->json([
-            'message' => 'Logo uploaded successfully',
-            'data' => ['logo' => $school->logo],
-        ]);
+        return response()->json(['logo_url' => Storage::url($path)]);
     }
 
-    /**
-     * Upload banner
-     * POST /api/v1/school/{id}/upload-banner
-     */
-    public function uploadBanner(Request $request, $id)
+    public function uploadBanner(Request $request, int $id): JsonResponse
     {
         $request->validate([
             'banner' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
@@ -74,23 +55,17 @@ class SchoolProfileController extends Controller
 
         $school = AutoSchool::findOrFail($id);
 
-        // Check authorization
-        if (auth()->user()->id !== $school->user_id && !auth()->user()->isAdmin()) {
+        if (auth()->id() !== $school->user_id && ! auth()->user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Delete old banner
-        if ($school->banner) {
-            \Storage::disk('public')->delete($school->banner);
+        if ($school->banner_url) {
+            Storage::disk('public')->delete($school->banner_url);
         }
 
-        // Store new banner
         $path = $request->file('banner')->store('schools/banners', 'public');
-        $school->update(['banner' => $path]);
+        $school->update(['banner_url' => $path]);
 
-        return response()->json([
-            'message' => 'Banner uploaded successfully',
-            'data' => ['banner' => $school->banner],
-        ]);
+        return response()->json(['banner_url' => Storage::url($path)]);
     }
 }

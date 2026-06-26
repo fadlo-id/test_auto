@@ -92,9 +92,24 @@ class AutoSchool extends Model
         return $this->reviews()->count();
     }
 
-    public function isPremium()
+    public function getIsVerifiedAttribute(): bool
+    {
+        return $this->verified_at !== null;
+    }
+
+    public function isPremium(): bool
     {
         return $this->subscription && $this->subscription->isActive();
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true)->approved();
     }
 
     public function stats()
