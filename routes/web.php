@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/services/{service}', [SchoolServices::class, 'update'])->name('services.update');
         Route::delete('/services/{service}', [SchoolServices::class, 'destroy'])->name('services.destroy');
         Route::get('/subscription', [SchoolSubscription::class, 'index'])->name('subscription');
+        Route::post('/subscription/cancel', [SchoolSubscription::class, 'cancel'])->name('subscription.cancel');
         Route::post('/payment/intent', [SchoolPayment::class, 'createIntent'])->name('payment.intent');
         Route::get('/payment/success', [SchoolPayment::class, 'success'])->name('payment.success');
         Route::get('/payment/cancel', [SchoolPayment::class, 'cancel'])->name('payment.cancel');
