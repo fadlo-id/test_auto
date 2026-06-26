@@ -1,361 +1,210 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import axios from 'axios';
-import Alert from '@/Components/Common/Alert';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import AdminLayout from '@/Layouts/AdminLayout';
 
-export default function AutoSchools() {
-    const [schools, setSchools] = useState([]);
-    const [filteredSchools, setFilteredSchools] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [editingSchool, setEditingSchool] = useState(null);
-    const [editForm, setEditForm] = useState({});
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+function StatusBadge({ status }) {
+    const map = {
+        approved: 'bg-green-100 text-green-700',
+        rejected: 'bg-red-100 text-red-700',
+        pending:  'bg-yellow-100 text-yellow-700',
+    };
+    const labels = { approved: 'Approuvé', rejected: 'Refusé', pending: 'En attente' };
+    return (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
+            {labels[status] ?? status}
+        </span>
+    );
+}
 
-    useEffect(() => {
-        fetchSchools();
-    }, []);
+export default function AutoSchools({ schools, filters }) {
+    const { flash } = usePage().props;
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [status, setStatus] = useState(filters.status ?? 'all');
+    const [rejectModal, setRejectModal] = useState(null);
+    const [rejectReason, setRejectReason] = useState('');
 
-    useEffect(() => {
-        filterSchools();
-    }, [searchTerm, filterStatus, schools]);
-
-    const fetchSchools = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/v1/admin/schools', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setSchools(response.data.data || response.data);
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: 'Failed to load schools',
-            });
-        } finally {
-            setLoading(false);
-        }
+    const applyFilters = (newStatus) => {
+        const s = newStatus ?? status;
+        router.get(route('admin.auto-schools.index'), { search, status: s }, { preserveState: true, replace: true });
     };
 
-    const filterSchools = () => {
-        let filtered = schools;
-
-        // Filter by status
-        if (filterStatus !== 'all') {
-            filtered = filtered.filter(school => school.status === filterStatus);
-        }
-
-        // Filter by search term
-        if (searchTerm) {
-            filtered = filtered.filter(school =>
-                school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                school.email?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        setFilteredSchools(filtered);
-        setCurrentPage(1);
+    const approve = (school) => {
+        router.post(route('admin.auto-schools.approve', school.id), {}, { preserveScroll: true });
     };
 
-    const handleEdit = (school) => {
-        setEditingSchool(school.id);
-        setEditForm({
-            name: school.name,
-            email: school.email,
-            phone: school.phone,
+    const openReject = (school) => {
+        setRejectModal(school);
+        setRejectReason('');
+    };
+
+    const submitReject = () => {
+        router.post(route('admin.auto-schools.reject', rejectModal.id), { reason: rejectReason }, {
+            preserveScroll: true,
+            onSuccess: () => setRejectModal(null),
         });
     };
 
-    const handleSaveEdit = async (schoolId) => {
-        try {
-            await axios.put(`/api/v1/admin/schools/${schoolId}`, editForm, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAlert({
-                type: 'success',
-                message: 'School updated successfully',
-            });
-            setEditingSchool(null);
-            fetchSchools();
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: error.response?.data?.message || 'Failed to update school',
-            });
+    const deleteSchool = (school) => {
+        if (confirm(`Supprimer "${school.name}" ?`)) {
+            router.delete(route('admin.auto-schools.destroy', school.id), { preserveScroll: true });
         }
     };
-
-    const handleApprove = async (schoolId) => {
-        try {
-            await axios.post(`/api/v1/admin/schools/${schoolId}/approve`, {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAlert({
-                type: 'success',
-                message: 'School approved successfully',
-            });
-            fetchSchools();
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: error.response?.data?.message || 'Failed to approve school',
-            });
-        }
-    };
-
-    const handleReject = async (schoolId) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-
-        try {
-            await axios.post(`/api/v1/admin/schools/${schoolId}/reject`, { reason }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAlert({
-                type: 'success',
-                message: 'School rejected successfully',
-            });
-            fetchSchools();
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: error.response?.data?.message || 'Failed to reject school',
-            });
-        }
-    };
-
-    const handleDelete = async (schoolId) => {
-        if (confirm('Are you sure you want to delete this school?')) {
-            try {
-                await axios.delete(`/api/v1/admin/schools/${schoolId}`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
-                    },
-                });
-                setAlert({
-                    type: 'success',
-                    message: 'School deleted successfully',
-                });
-                fetchSchools();
-            } catch (error) {
-                setAlert({
-                    type: 'error',
-                    message: error.response?.data?.message || 'Failed to delete school',
-                });
-            }
-        }
-    };
-
-    const dismissAlert = () => setAlert(null);
-
-    const getStatusBadge = (status) => {
-        const statusMap = {
-            pending: 'bg-yellow-100 text-yellow-800',
-            approved: 'bg-green-100 text-green-800',
-            rejected: 'bg-red-100 text-red-800',
-        };
-        return statusMap[status] || 'bg-gray-100 text-gray-800';
-    };
-
-    const paginatedSchools = filteredSchools.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-    const totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
 
     return (
-        <>
-            <Head title="Manage Schools" />
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="px-6 py-4">
-                        <h1 className="text-3xl font-bold text-gray-900">Manage Schools</h1>
-                        <p className="text-gray-600 mt-1">Approve, reject, or manage driving schools</p>
-                    </div>
-                </div>
+        <AdminLayout title="Auto-écoles">
+            <Head title="Admin — Auto-écoles" />
 
-                {/* Alert */}
-                {alert && <Alert type={alert.type} message={alert.message} onClose={dismissAlert} />}
+            {flash?.success && (
+                <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">{flash.success}</div>
+            )}
+            {flash?.error && (
+                <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">{flash.error}</div>
+            )}
 
-                {/* Content */}
-                <div className="p-6">
-                    {/* Search and Filter */}
-                    <div className="mb-6 space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200">
+                <div className="p-5 border-b border-gray-100">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <input
                             type="text"
-                            placeholder="Search by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Rechercher..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
                         <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            value={status}
+                            onChange={(e) => { setStatus(e.target.value); applyFilters(e.target.value); }}
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="all">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="approved">Approuvés</option>
+                            <option value="rejected">Refusés</option>
                         </select>
-                    </div>
-
-                    {/* Schools Table */}
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                        {loading ? (
-                            <div className="p-6 text-center">Loading schools...</div>
-                        ) : paginatedSchools.length === 0 ? (
-                            <div className="p-6 text-center text-gray-500">No schools found</div>
-                        ) : (
-                            <>
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Phone</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {paginatedSchools.map((school) => (
-                                            <tr key={school.id} className={editingSchool === school.id ? 'bg-blue-50' : ''}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {editingSchool === school.id ? (
-                                                        <input
-                                                            type="text"
-                                                            value={editForm.name}
-                                                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                            className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                        />
-                                                    ) : (
-                                                        <span className="font-medium text-gray-900">{school.name}</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {editingSchool === school.id ? (
-                                                        <input
-                                                            type="email"
-                                                            value={editForm.email}
-                                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                                            className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-gray-700">{school.email}</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {editingSchool === school.id ? (
-                                                        <input
-                                                            type="tel"
-                                                            value={editForm.phone}
-                                                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                                            className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-gray-700">{school.phone}</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(school.status)}`}>
-                                                        {school.status.charAt(0).toUpperCase() + school.status.slice(1)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                                    {editingSchool === school.id ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleSaveEdit(school.id)}
-                                                                className="text-green-600 hover:text-green-900 font-medium"
-                                                            >
-                                                                Save
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingSchool(null)}
-                                                                className="text-gray-600 hover:text-gray-900 font-medium"
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleEdit(school)}
-                                                                className="text-blue-600 hover:text-blue-900 font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            {school.status === 'pending' && (
-                                                                <>
-                                                                    <button
-                                                                        onClick={() => handleApprove(school.id)}
-                                                                        className="text-green-600 hover:text-green-900 font-medium"
-                                                                    >
-                                                                        Approve
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleReject(school.id)}
-                                                                        className="text-red-600 hover:text-red-900 font-medium"
-                                                                    >
-                                                                        Reject
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                            <button
-                                                                onClick={() => handleDelete(school.id)}
-                                                                className="text-red-600 hover:text-red-900 font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {/* Pagination */}
-                                <div className="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-200">
-                                    <span className="text-sm text-gray-700">
-                                        Showing {paginatedSchools.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredSchools.length)} of {filteredSchools.length}
-                                    </span>
-                                    <div className="space-x-2">
-                                        <button
-                                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <span className="text-sm text-gray-700">Page {currentPage} of {totalPages}</span>
-                                        <button
-                                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                        <button
+                            onClick={() => applyFilters()}
+                            className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700"
+                        >
+                            Filtrer
+                        </button>
                     </div>
                 </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                {['Nom', 'Ville', 'Propriétaire', 'Statut', 'Créé le', 'Actions'].map((h) => (
+                                    <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {schools.data.map((school) => (
+                                <tr key={school.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 font-medium text-gray-900">{school.name}</td>
+                                    <td className="px-4 py-3 text-gray-600">{school.city}</td>
+                                    <td className="px-4 py-3 text-gray-600">
+                                        <div>{school.user?.name}</div>
+                                        <div className="text-xs text-gray-400">{school.user?.email}</div>
+                                    </td>
+                                    <td className="px-4 py-3"><StatusBadge status={school.status} /></td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {new Date(school.created_at).toLocaleDateString('fr-FR')}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-1">
+                                            {school.status !== 'approved' && (
+                                                <button
+                                                    onClick={() => approve(school)}
+                                                    className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 font-medium"
+                                                >
+                                                    Approuver
+                                                </button>
+                                            )}
+                                            {school.status !== 'rejected' && (
+                                                <button
+                                                    onClick={() => openReject(school)}
+                                                    className="text-xs px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 font-medium"
+                                                >
+                                                    Refuser
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => deleteSchool(school)}
+                                                className="text-xs px-2 py-1 rounded bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600 font-medium"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {schools.data.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
+                                        Aucune auto-école trouvée
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {schools.links && (
+                    <div className="p-4 border-t border-gray-100 flex gap-1 justify-center">
+                        {schools.links.map((link, i) => (
+                            <Link
+                                key={i}
+                                href={link.url ?? '#'}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                className={`px-3 py-1.5 rounded text-sm ${
+                                    link.active
+                                        ? 'bg-orange-600 text-white'
+                                        : link.url
+                                        ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                        : 'bg-white border border-gray-100 text-gray-300 cursor-default'
+                                }`}
+                                preserveScroll
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
-        </>
+
+            {/* Reject modal */}
+            {rejectModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+                        <h3 className="font-semibold text-gray-900 mb-3">
+                            Refuser « {rejectModal.name} »
+                        </h3>
+                        <textarea
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Raison du refus..."
+                            rows={3}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                        />
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                onClick={() => setRejectModal(null)}
+                                className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={submitReject}
+                                disabled={!rejectReason.trim()}
+                                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                            >
+                                Confirmer le refus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </AdminLayout>
     );
 }

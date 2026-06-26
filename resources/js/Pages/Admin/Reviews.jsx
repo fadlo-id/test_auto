@@ -1,302 +1,121 @@
-import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
-import axios from 'axios';
-import Alert from '@/Components/Common/Alert';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import AdminLayout from '@/Layouts/AdminLayout';
 
-export default function Reviews() {
-    const [reviews, setReviews] = useState([]);
-    const [filteredReviews, setFilteredReviews] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [alert, setAlert] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [selectedReview, setSelectedReview] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
-    useEffect(() => {
-        fetchReviews();
-    }, []);
-
-    useEffect(() => {
-        filterReviews();
-    }, [searchTerm, filterStatus, reviews]);
-
-    const fetchReviews = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/v1/admin/reviews', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setReviews(response.data.data || response.data);
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: 'Failed to load reviews',
-            });
-        } finally {
-            setLoading(false);
-        }
+function StatusBadge({ status }) {
+    const map = {
+        approved: 'bg-green-100 text-green-700',
+        rejected: 'bg-red-100 text-red-700',
+        pending:  'bg-yellow-100 text-yellow-700',
     };
-
-    const filterReviews = () => {
-        let filtered = reviews;
-
-        // Filter by status
-        if (filterStatus !== 'all') {
-            filtered = filtered.filter(review => review.status === filterStatus);
-        }
-
-        // Filter by search term
-        if (searchTerm) {
-            filtered = filtered.filter(review =>
-                review.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                review.user_name?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        setFilteredReviews(filtered);
-        setCurrentPage(1);
-    };
-
-    const handleApprove = async (reviewId) => {
-        try {
-            await axios.post(`/api/v1/admin/reviews/${reviewId}/approve`, {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAlert({
-                type: 'success',
-                message: 'Review approved successfully',
-            });
-            setSelectedReview(null);
-            fetchReviews();
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: error.response?.data?.message || 'Failed to approve review',
-            });
-        }
-    };
-
-    const handleReject = async (reviewId) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-
-        try {
-            await axios.post(`/api/v1/admin/reviews/${reviewId}/reject`, { reason }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            setAlert({
-                type: 'success',
-                message: 'Review rejected successfully',
-            });
-            setSelectedReview(null);
-            fetchReviews();
-        } catch (error) {
-            setAlert({
-                type: 'error',
-                message: error.response?.data?.message || 'Failed to reject review',
-            });
-        }
-    };
-
-    const handleDelete = async (reviewId) => {
-        if (confirm('Are you sure you want to delete this review?')) {
-            try {
-                await axios.delete(`/api/v1/admin/reviews/${reviewId}`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
-                    },
-                });
-                setAlert({
-                    type: 'success',
-                    message: 'Review deleted successfully',
-                });
-                setSelectedReview(null);
-                fetchReviews();
-            } catch (error) {
-                setAlert({
-                    type: 'error',
-                    message: error.response?.data?.message || 'Failed to delete review',
-                });
-            }
-        }
-    };
-
-    const dismissAlert = () => setAlert(null);
-
-    const getStatusBadge = (status) => {
-        const statusMap = {
-            pending: 'bg-yellow-100 text-yellow-800',
-            approved: 'bg-green-100 text-green-800',
-            rejected: 'bg-red-100 text-red-800',
-        };
-        return statusMap[status] || 'bg-gray-100 text-gray-800';
-    };
-
-    const renderStars = (rating) => {
-        return (
-            <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                    <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>★</span>
-                ))}
-            </div>
-        );
-    };
-
-    const paginatedReviews = filteredReviews.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
+    const labels = { approved: 'Approuvé', rejected: 'Refusé', pending: 'En attente' };
+    return (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
+            {labels[status] ?? status}
+        </span>
     );
-    const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+}
+
+export default function Reviews({ reviews, filters }) {
+    const { flash } = usePage().props;
+    const [status, setStatus] = useState(filters.status ?? 'all');
+
+    const applyFilter = (s) => {
+        setStatus(s);
+        router.get(route('admin.reviews.index'), { status: s }, { preserveState: true, replace: true });
+    };
+
+    const approve = (review) => {
+        router.post(route('admin.reviews.approve', review.id), {}, { preserveScroll: true });
+    };
+
+    const reject = (review) => {
+        router.post(route('admin.reviews.reject', review.id), {}, { preserveScroll: true });
+    };
+
+    const remove = (review) => {
+        if (confirm('Supprimer cet avis ?')) {
+            router.delete(route('admin.reviews.destroy', review.id), { preserveScroll: true });
+        }
+    };
 
     return (
-        <>
-            <Head title="Moderate Reviews" />
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="px-6 py-4">
-                        <h1 className="text-3xl font-bold text-gray-900">Moderate Reviews</h1>
-                        <p className="text-gray-600 mt-1">Review and approve user reviews</p>
-                    </div>
+        <AdminLayout title="Avis">
+            <Head title="Admin — Avis" />
+
+            {flash?.success && (
+                <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">{flash.success}</div>
+            )}
+
+            <div className="bg-white rounded-xl border border-gray-200">
+                <div className="p-5 border-b border-gray-100 flex gap-2 flex-wrap">
+                    {['all', 'pending', 'approved', 'rejected'].map((s) => (
+                        <button
+                            key={s}
+                            onClick={() => applyFilter(s)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                status === s ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {s === 'all' ? 'Tous' : s === 'pending' ? 'En attente' : s === 'approved' ? 'Approuvés' : 'Refusés'}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Alert */}
-                {alert && <Alert type={alert.type} message={alert.message} onClose={dismissAlert} />}
-
-                {/* Content */}
-                <div className="p-6">
-                    {/* Search and Filter */}
-                    <div className="mb-6 space-y-4">
-                        <input
-                            type="text"
-                            placeholder="Search by school or user name..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
-
-                    {/* Reviews List */}
-                    <div className="space-y-4">
-                        {loading ? (
-                            <div className="bg-white rounded-lg shadow p-6 text-center">Loading reviews...</div>
-                        ) : paginatedReviews.length === 0 ? (
-                            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">No reviews found</div>
-                        ) : (
-                            <>
-                                {paginatedReviews.map((review) => (
-                                    <div
-                                        key={review.id}
-                                        className={`bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow ${
-                                            selectedReview?.id === review.id ? 'ring-2 ring-blue-500' : ''
-                                        }`}
-                                        onClick={() => setSelectedReview(selectedReview?.id === review.id ? null : review)}
-                                    >
-                                        {/* Review Header */}
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div>
-                                                <h3 className="text-lg font-bold text-gray-900">{review.school_name}</h3>
-                                                <p className="text-gray-600 text-sm">By {review.user_name}</p>
-                                                <p className="text-gray-500 text-xs mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
-                                            </div>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(review.status)}`}>
-                                                {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
-                                            </span>
-                                        </div>
-
-                                        {/* Rating */}
-                                        <div className="mb-3">
-                                            {renderStars(review.rating)}
-                                        </div>
-
-                                        {/* Review Content */}
-                                        <p className="text-gray-700 mb-4">{review.comment}</p>
-
-                                        {/* Expanded Actions */}
-                                        {selectedReview?.id === review.id && (
-                                            <div className="border-t pt-4 mt-4 space-y-3">
-                                                {review.status === 'pending' && (
-                                                    <div className="flex space-x-2">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleApprove(review.id);
-                                                            }}
-                                                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                                                        >
-                                                            Approve
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleReject(review.id);
-                                                            }}
-                                                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-                                                        >
-                                                            Reject
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(review.id);
-                                                    }}
-                                                    className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        )}
+                <div className="divide-y divide-gray-100">
+                    {reviews.data.map((review) => (
+                        <div key={review.id} className="p-5">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-yellow-500 text-sm">{stars(review.rating)}</span>
+                                        <StatusBadge status={review.status} />
                                     </div>
-                                ))}
-
-                                {/* Pagination */}
-                                <div className="flex items-center justify-between mt-6">
-                                    <span className="text-sm text-gray-700">
-                                        Showing {paginatedReviews.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredReviews.length)} of {filteredReviews.length}
-                                    </span>
-                                    <div className="space-x-2">
-                                        <button
-                                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <span className="text-sm text-gray-700">Page {currentPage} of {totalPages}</span>
-                                        <button
-                                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
+                                    <p className="font-medium text-gray-900 mb-1">{review.title}</p>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{review.content}</p>
+                                    <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+                                        <span>Par <strong>{review.user?.name}</strong></span>
+                                        <span>·</span>
+                                        <span>Auto-école : <strong>{review.auto_school?.name}</strong></span>
+                                        <span>·</span>
+                                        <span>{new Date(review.created_at).toLocaleDateString('fr-FR')}</span>
                                     </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
+                                <div className="flex gap-1 shrink-0">
+                                    {review.status !== 'approved' && (
+                                        <button onClick={() => approve(review)} className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 font-medium">
+                                            Approuver
+                                        </button>
+                                    )}
+                                    {review.status !== 'rejected' && (
+                                        <button onClick={() => reject(review)} className="text-xs px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 font-medium">
+                                            Refuser
+                                        </button>
+                                    )}
+                                    <button onClick={() => remove(review)} className="text-xs px-2 py-1 rounded bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600 font-medium">
+                                        Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {reviews.data.length === 0 && (
+                        <div className="p-10 text-center text-gray-400">Aucun avis trouvé</div>
+                    )}
                 </div>
+
+                {reviews.links && (
+                    <div className="p-4 border-t border-gray-100 flex gap-1 justify-center">
+                        {reviews.links.map((link, i) => (
+                            <Link key={i} href={link.url ?? '#'} dangerouslySetInnerHTML={{ __html: link.label }}
+                                className={`px-3 py-1.5 rounded text-sm ${link.active ? 'bg-orange-600 text-white' : link.url ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' : 'bg-white border border-gray-100 text-gray-300 cursor-default'}`}
+                                preserveScroll />
+                        ))}
+                    </div>
+                )}
             </div>
-        </>
+        </AdminLayout>
     );
 }
