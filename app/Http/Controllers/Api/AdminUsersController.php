@@ -5,48 +5,44 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use Illuminate\Http\Request;
 
 class AdminUsersController extends Controller
 {
     public function index()
     {
-        $this->authorize('isAdmin');
+        $users = User::orderBy('created_at', 'desc')->paginate(20);
 
-        $users = User::paginate(20);
         return response()->json($users);
     }
 
-    public function update($id, UpdateUserRequest $request)
+    public function update(string $id, UpdateUserRequest $request)
     {
-        $this->authorize('isAdmin');
-
         $user = User::findOrFail($id);
         $user->update($request->validated());
 
         return response()->json([
             'message' => 'User updated successfully',
-            'user' => $user,
+            'user'    => $user,
         ]);
     }
 
-    public function ban($id, Request $request)
+    public function ban(string $id, Request $request)
     {
-        $this->authorize('isAdmin');
-
         $user = User::findOrFail($id);
-        $user->is_banned = $request->input('is_banned', true);
-        $user->save();
+
+        // Ban = désactiver le compte (is_active false)
+        $ban = (bool) $request->input('ban', true);
+        $user->update(['is_active' => ! $ban]);
 
         return response()->json([
-            'message' => $user->is_banned ? 'User banned successfully' : 'User unbanned successfully',
-            'user' => $user,
+            'message' => $ban ? 'User banned successfully' : 'User unbanned successfully',
+            'user'    => $user,
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
-        $this->authorize('isAdmin');
-
         $user = User::findOrFail($id);
         $user->delete();
 

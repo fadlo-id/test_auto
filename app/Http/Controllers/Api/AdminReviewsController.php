@@ -10,59 +10,54 @@ class AdminReviewsController extends Controller
 {
     public function index()
     {
-        $this->authorize('isAdmin');
-
-        $reviews = Review::with(['school', 'user'])
+        $reviews = Review::with(['autoSchool:id,name', 'user:id,name'])
+            ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return response()->json($reviews->map(function ($review) {
-            return [
-                'id' => $review->id,
-                'school_name' => $review->school?->name,
-                'user_name' => $review->user?->name,
-                'rating' => $review->rating,
-                'comment' => $review->comment,
-                'status' => $review->status,
-                'created_at' => $review->created_at,
-            ];
-        }));
+        return response()->json($reviews->through(fn($review) => [
+            'id'          => $review->id,
+            'school_name' => $review->autoSchool?->name,
+            'user_name'   => $review->user?->name,
+            'rating'      => $review->rating,
+            'title'       => $review->title,
+            'content'     => $review->content,
+            'status'      => $review->status,
+            'created_at'  => $review->created_at,
+        ]));
     }
 
-    public function approve($id)
+    public function approve(string $id)
     {
-        $this->authorize('isAdmin');
-
         $review = Review::findOrFail($id);
-        $review->update(['status' => 'approved']);
+        $review->update([
+            'status'           => 'approved',
+            'rejection_reason' => null,
+        ]);
 
         return response()->json([
             'message' => 'Review approved successfully',
-            'review' => $review,
+            'review'  => $review,
         ]);
     }
 
-    public function reject($id, Request $request)
+    public function reject(string $id, Request $request)
     {
-        $this->authorize('isAdmin');
-
-        $request->validate(['reason' => 'required|string']);
+        $request->validate(['reason' => 'required|string|max:500']);
 
         $review = Review::findOrFail($id);
         $review->update([
-            'status' => 'rejected',
+            'status'           => 'rejected',
             'rejection_reason' => $request->input('reason'),
         ]);
 
         return response()->json([
             'message' => 'Review rejected successfully',
-            'review' => $review,
+            'review'  => $review,
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
-        $this->authorize('isAdmin');
-
         $review = Review::findOrFail($id);
         $review->delete();
 

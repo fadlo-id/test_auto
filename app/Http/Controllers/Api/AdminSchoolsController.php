@@ -11,60 +11,57 @@ class AdminSchoolsController extends Controller
 {
     public function index()
     {
-        $this->authorize('isAdmin');
+        $schools = AutoSchool::with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
-        $schools = AutoSchool::with('user')->paginate(20);
         return response()->json($schools);
     }
 
-    public function update($id, UpdateSchoolRequest $request)
+    public function update(string $id, UpdateSchoolRequest $request)
     {
-        $this->authorize('isAdmin');
-
         $school = AutoSchool::findOrFail($id);
         $school->update($request->validated());
 
         return response()->json([
             'message' => 'School updated successfully',
-            'school' => $school,
+            'school'  => $school,
         ]);
     }
 
-    public function approve($id)
+    public function approve(string $id)
     {
-        $this->authorize('isAdmin');
-
         $school = AutoSchool::findOrFail($id);
-        $school->update(['status' => 'approved']);
+        $school->update([
+            'status'           => 'approved',
+            'rejection_reason' => null,
+            'verified_at'      => now(),
+        ]);
 
         return response()->json([
             'message' => 'School approved successfully',
-            'school' => $school,
+            'school'  => $school,
         ]);
     }
 
-    public function reject($id, Request $request)
+    public function reject(string $id, Request $request)
     {
-        $this->authorize('isAdmin');
-
-        $request->validate(['reason' => 'required|string']);
+        $request->validate(['reason' => 'required|string|max:1000']);
 
         $school = AutoSchool::findOrFail($id);
         $school->update([
-            'status' => 'rejected',
+            'status'           => 'rejected',
             'rejection_reason' => $request->input('reason'),
         ]);
 
         return response()->json([
             'message' => 'School rejected successfully',
-            'school' => $school,
+            'school'  => $school,
         ]);
     }
 
-    public function destroy($id)
+    public function destroy(string $id)
     {
-        $this->authorize('isAdmin');
-
         $school = AutoSchool::findOrFail($id);
         $school->delete();
 

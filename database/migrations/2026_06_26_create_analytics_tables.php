@@ -103,8 +103,8 @@ return new class extends Migration
         Schema::create('analytics_monthly_stats', function (Blueprint $table) {
             $table->id();
             $table->foreignId('auto_school_id')->constrained()->onDelete('cascade');
-            $table->year('year');
-            $table->month('month');
+            $table->unsignedSmallInteger('year');
+            $table->unsignedTinyInteger('month');
             
             // View metrics
             $table->integer('total_views')->default(0);

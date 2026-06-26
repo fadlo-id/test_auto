@@ -10,41 +10,34 @@ class AdminSubscriptionsController extends Controller
 {
     public function index()
     {
-        $this->authorize('isAdmin');
-
-        $subscriptions = Subscription::with(['school', 'plan'])
+        $subscriptions = Subscription::with(['autoSchool:id,name', 'plan:id,name,price'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20)
-            ->map(function ($subscription) {
-                return [
-                    'id' => $subscription->id,
-                    'school_name' => $subscription->school?->name,
-                    'plan_name' => $subscription->plan?->name,
-                    'price' => $subscription->plan?->price,
-                    'status' => $subscription->status,
-                    'start_date' => $subscription->start_date,
-                    'expires_at' => $subscription->expires_at,
-                ];
-            });
+            ->paginate(20);
 
-        return response()->json($subscriptions);
+        return response()->json($subscriptions->through(fn($sub) => [
+            'id'          => $sub->id,
+            'school_name' => $sub->autoSchool?->name,
+            'plan_name'   => $sub->plan?->name,
+            'price'       => $sub->plan?->price,
+            'status'      => $sub->status,
+            'started_at'  => $sub->started_at,
+            'expires_at'  => $sub->expires_at,
+        ]));
     }
 
-    public function cancel($id, Request $request)
+    public function cancel(string $id, Request $request)
     {
-        $this->authorize('isAdmin');
-
-        $request->validate(['reason' => 'required|string']);
+        $request->validate(['reason' => 'required|string|max:500']);
 
         $subscription = Subscription::findOrFail($id);
         $subscription->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->input('reason'),
-            'cancelled_at' => now(),
+            'status'               => 'canceled',
+            'cancellation_reason'  => $request->input('reason'),
+            'cancelled_at'         => now(),
         ]);
 
         return response()->json([
-            'message' => 'Subscription cancelled successfully',
+            'message'      => 'Subscription cancelled successfully',
             'subscription' => $subscription,
         ]);
     }

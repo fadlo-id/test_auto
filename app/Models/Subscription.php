@@ -5,12 +5,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subscription extends Model
 {
-    protected $fillable = ['auto_school_id', 'plan_id', 'stripe_subscription_id', 'started_at', 'expires_at', 'status', 'cancel_at_period_end'];
-    protected $casts = ['started_at' => 'datetime', 'expires_at' => 'datetime'];
+    protected $fillable = [
+        'auto_school_id', 'plan_id', 'stripe_subscription_id',
+        'started_at', 'expires_at', 'status', 'cancel_at_period_end',
+        'cancellation_reason', 'cancelled_at',
+    ];
+    protected $casts = [
+        'started_at'  => 'datetime',
+        'expires_at'  => 'datetime',
+        'cancelled_at' => 'datetime',
+        'cancel_at_period_end' => 'boolean',
+    ];
 
     public function autoSchool()
     {
         return $this->belongsTo(AutoSchool::class);
+    }
+
+    /** @deprecated Use autoSchool() — kept for legacy controller compatibility */
+    public function school()
+    {
+        return $this->autoSchool();
     }
 
     public function plan()

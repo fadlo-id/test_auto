@@ -15,8 +15,6 @@ class AdminAnalyticsController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('isAdmin');
-
         $range = $request->input('range', 30);
         $startDate = Carbon::now()->subDays($range);
 

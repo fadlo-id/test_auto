@@ -34,6 +34,8 @@ class AutoSchool extends Model
         'verified_at',
         'featured_until',
         'is_active',
+        'status',
+        'rejection_reason',
     ];
 
     protected $casts = [

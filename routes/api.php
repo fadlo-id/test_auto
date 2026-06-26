@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SubscriptionController;
 
 Route::prefix('v1')->group(function () {
+    require base_path('routes/admin.php');
+    require base_path('routes/school-dashboard.php');
+    require base_path('routes/analytics.php');
 
     // Auth publique
     Route::post('/auth/register', [AuthController::class, 'register']);
