@@ -35,6 +35,12 @@ function ReviewCard({ review }) {
             </div>
             {review.title && <p className="font-medium text-gray-800 text-sm mb-1">{review.title}</p>}
             {review.content && <p className="text-gray-600 text-sm leading-relaxed">{review.content}</p>}
+            {review.owner_reply && (
+                <div className="mt-3 ml-3 pl-3 border-l-2 border-orange-200 bg-orange-50 rounded-r-lg p-2">
+                    <p className="text-xs font-medium text-orange-700 mb-1">Reponse de l'auto-ecole</p>
+                    <p className="text-sm text-gray-700">{review.owner_reply}</p>
+                </div>
+            )}
         </div>
     );
 }

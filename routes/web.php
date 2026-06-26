@@ -79,6 +79,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [SchoolDashboard::class, 'index'])->name('dashboard');
         Route::get('/analytics', fn () => Inertia::render('SchoolDashboard/Analytics'))->name('analytics');
         Route::get('/reviews', [SchoolReviews::class, 'index'])->name('reviews');
+        Route::post('/reviews/{review}/reply', [SchoolReviews::class, 'reply'])->name('reviews.reply');
+        Route::delete('/reviews/{review}/reply', [SchoolReviews::class, 'deleteReply'])->name('reviews.reply.delete');
         Route::get('/services', [SchoolServices::class, 'index'])->name('services');
         Route::post('/services', [SchoolServices::class, 'store'])->name('services.store');
         Route::put('/services/{service}', [SchoolServices::class, 'update'])->name('services.update');

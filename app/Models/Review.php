@@ -11,11 +11,13 @@ class Review extends Model
     protected $fillable = [
         'auto_school_id', 'user_id', 'rating', 'title', 'content',
         'verified', 'helpful_count', 'status', 'rejection_reason',
+        'owner_reply', 'replied_at',
     ];
 
     protected $casts = [
-        'rating'   => 'integer',
-        'verified' => 'boolean',
+        'rating'     => 'integer',
+        'verified'   => 'boolean',
+        'replied_at' => 'datetime',
     ];
 
     public function scopeVerified($query)
