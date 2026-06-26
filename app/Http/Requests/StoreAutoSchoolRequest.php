@@ -9,7 +9,8 @@ class StoreAutoSchoolRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', AutoSchool::class);
+        // Allow school_owner without a school to create one; also Policy.create checks this
+        return $this->user()->isSchoolOwner() && $this->user()->autoSchool === null;
     }
 
     public function rules(): array

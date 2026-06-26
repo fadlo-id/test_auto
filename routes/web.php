@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\School\DashboardController as SchoolDashboard;
+use App\Http\Controllers\School\ReviewsController as SchoolReviews;
+use App\Http\Controllers\School\ServicesController as SchoolServices;
+use App\Http\Controllers\School\SettingsController as SchoolSettings;
+use App\Http\Controllers\School\SubscriptionController as SchoolSubscription;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\UsersController as AdminUsers;
 use App\Http\Controllers\Admin\SchoolsController as AdminSchools;
@@ -66,12 +71,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // School owner routes
     Route::middleware('school.owner')->prefix('school')->name('school.')->group(function () {
-        Route::get('/dashboard', fn () => Inertia::render('SchoolDashboard/Overview'))->name('dashboard');
+        Route::get('/dashboard', [SchoolDashboard::class, 'index'])->name('dashboard');
         Route::get('/analytics', fn () => Inertia::render('SchoolDashboard/Analytics'))->name('analytics');
-        Route::get('/reviews', fn () => Inertia::render('SchoolDashboard/Reviews'))->name('reviews');
-        Route::get('/services', fn () => Inertia::render('SchoolDashboard/Services'))->name('services');
-        Route::get('/subscription', fn () => Inertia::render('SchoolDashboard/Subscription'))->name('subscription');
-        Route::get('/settings', fn () => Inertia::render('SchoolDashboard/Settings'))->name('settings');
+        Route::get('/reviews', [SchoolReviews::class, 'index'])->name('reviews');
+        Route::get('/services', [SchoolServices::class, 'index'])->name('services');
+        Route::post('/services', [SchoolServices::class, 'store'])->name('services.store');
+        Route::put('/services/{service}', [SchoolServices::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [SchoolServices::class, 'destroy'])->name('services.destroy');
+        Route::get('/subscription', [SchoolSubscription::class, 'index'])->name('subscription');
+        Route::get('/settings', [SchoolSettings::class, 'index'])->name('settings');
+        Route::post('/settings', [SchoolSettings::class, 'store'])->name('settings.store');
+        Route::put('/settings', [SchoolSettings::class, 'update'])->name('settings.update');
+        Route::post('/settings/logo', [SchoolSettings::class, 'uploadLogo'])->name('settings.logo');
+        Route::post('/settings/banner', [SchoolSettings::class, 'uploadBanner'])->name('settings.banner');
     });
 });
 
