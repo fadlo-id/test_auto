@@ -5,6 +5,8 @@ use App\Http\Controllers\School\ReviewsController as SchoolReviews;
 use App\Http\Controllers\School\ServicesController as SchoolServices;
 use App\Http\Controllers\School\SettingsController as SchoolSettings;
 use App\Http\Controllers\School\SubscriptionController as SchoolSubscription;
+use App\Http\Controllers\School\PaymentController as SchoolPayment;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\UsersController as AdminUsers;
 use App\Http\Controllers\Admin\SchoolsController as AdminSchools;
@@ -18,6 +20,9 @@ use App\Http\Controllers\Public\SchoolDetailController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Stripe webhook (no CSRF)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 // Routes publiques
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -86,6 +91,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/services/{service}', [SchoolServices::class, 'update'])->name('services.update');
         Route::delete('/services/{service}', [SchoolServices::class, 'destroy'])->name('services.destroy');
         Route::get('/subscription', [SchoolSubscription::class, 'index'])->name('subscription');
+        Route::post('/payment/intent', [SchoolPayment::class, 'createIntent'])->name('payment.intent');
+        Route::get('/payment/success', [SchoolPayment::class, 'success'])->name('payment.success');
+        Route::get('/payment/cancel', [SchoolPayment::class, 'cancel'])->name('payment.cancel');
         Route::get('/settings', [SchoolSettings::class, 'index'])->name('settings');
         Route::post('/settings', [SchoolSettings::class, 'store'])->name('settings.store');
         Route::put('/settings', [SchoolSettings::class, 'update'])->name('settings.update');
