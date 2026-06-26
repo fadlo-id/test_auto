@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
 use App\Models\Review;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
+
     public function store(Request $request, string $slug): RedirectResponse
     {
         $school = AutoSchool::active()->where('slug', $slug)->firstOrFail();
@@ -40,6 +43,8 @@ class ReviewController extends Controller
             'content'        => $request->content,
             'status'         => 'pending',
         ]);
+
+        $this->notifications->notifyNewReview($school);
 
         return back()->with('success', 'Votre avis a ete soumis et est en attente de validation. Merci !');
     }
