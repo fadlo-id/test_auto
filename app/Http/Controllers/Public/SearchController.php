@@ -55,21 +55,18 @@ class SearchController extends Controller
             $lng    = (float) $lng;
             $radius = max(1, min(200, $radius));
 
-            $haversine = "(6371 * ACOS(
-                COS(RADIANS({$lat})) * COS(RADIANS(latitude))
-                * COS(RADIANS(longitude) - RADIANS({$lng}))
-                + SIN(RADIANS({$lat})) * SIN(RADIANS(latitude))
-            ))";
+            // Haversine formula using parameterized bindings to prevent SQL injection
+            $haversineExpr = '(6371 * ACOS(COS(RADIANS(?)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(latitude))))';
 
             $query->whereNotNull('latitude')
                   ->whereNotNull('longitude')
-                  ->whereRaw("{$haversine} <= ?", [$radius])
-                  ->selectRaw("auto_schools.*, {$haversine} AS distance_km");
+                  ->whereRaw("{$haversineExpr} <= ?", [$lat, $lng, $lat, $radius])
+                  ->selectRaw("auto_schools.*, {$haversineExpr} AS distance_km", [$lat, $lng, $lat]);
         }
 
         $sort = $request->input('sort', 'name');
         if ($lat !== null && $lng !== null && $sort === 'distance') {
-            $query->orderBy('distance_km');
+            $query->orderByRaw('distance_km ASC');
         } else {
             match ($sort) {
                 'rating'   => $query->orderByDesc('average_rating'),

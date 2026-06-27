@@ -68,7 +68,7 @@ class ReviewsTest extends TestCase
         $this->actingAs($user)
             ->post(route('school.detail.review', $school->slug), [
                 'rating'  => 3,
-                'content' => 'Second avis',
+                'content' => 'Ceci est mon deuxième avis sur cette auto-école.',
             ])
             ->assertRedirect()
             ->assertSessionHas('error');
@@ -82,7 +82,7 @@ class ReviewsTest extends TestCase
         $this->actingAs($owner)
             ->post(route('school.detail.review', $school->slug), [
                 'rating'  => 5,
-                'content' => "Ma propre ecole",
+                'content' => 'Je laisse un avis sur ma propre auto-école.',
             ])
             ->assertRedirect()
             ->assertSessionHas('error');

@@ -132,7 +132,7 @@ export default function Overview({ stats, recentReviews, favoriteSchools }) {
                         { label: 'Rechercher',    href: route('search'),          icon: '🔍' },
                         { label: 'Mes avis',      href: route('user.reviews'),    icon: '⭐' },
                         { label: 'Favoris',       href: route('user.favorites'),  icon: '❤️' },
-                        { label: 'Mon profil',    href: route('profile.edit'),    icon: '👤' },
+                        { label: 'Mon profil',    href: route('user.profile'),    icon: '👤' },
                     ].map(a => (
                         <Link key={a.href} href={a.href}
                             className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-colors text-center">

@@ -15,12 +15,20 @@ class ReviewController extends Controller
 
     public function store(Request $request, string $slug): RedirectResponse
     {
+        // Rate limit: 3 reviews per hour per user
+        \Illuminate\Support\Facades\RateLimiter::attempt(
+            'review:' . auth()->id(),
+            3,
+            fn () => null,
+            60 * 60,
+        ) ?: abort(429, 'Trop de tentatives. Veuillez patienter avant de soumettre un nouvel avis.');
+
         $school = AutoSchool::active()->where('slug', $slug)->firstOrFail();
 
         $request->validate([
             'rating'  => 'required|integer|between:1,5',
-            'title'   => 'nullable|string|max:255',
-            'content' => 'required|string|max:2000',
+            'title'   => 'nullable|string|min:3|max:255',
+            'content' => 'required|string|min:20|max:2000',
         ]);
 
         $alreadyReviewed = Review::where('auto_school_id', $school->id)

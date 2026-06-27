@@ -81,20 +81,18 @@ class AutoSchool extends Model
         return $this->hasOne(Subscription::class);
     }
 
-    // Accessors
-    public function getAverageRatingAttribute()
-    {
-        return $this->reviews()->avg('rating') ?? 0;
-    }
-
-    public function getReviewCountAttribute()
-    {
-        return $this->reviews()->count();
-    }
+    // Accessors — NOTE: getAverageRatingAttribute / getReviewCountAttribute are intentionally removed.
+    // Always use withAvg('reviews as average_rating','rating') and withCount('reviews')
+    // in queries to avoid N+1. Direct attribute access falls back to null when not eager-loaded.
 
     public function getIsVerifiedAttribute(): bool
     {
         return $this->verified_at !== null;
+    }
+
+    public function getIsFeaturedAttribute(): bool
+    {
+        return $this->featured_until !== null && $this->featured_until->isFuture();
     }
 
     public function isPremium(): bool
@@ -148,8 +146,4 @@ class AutoSchool extends Model
         return $this->hasMany(SchoolClick::class);
     }
 
-    public function getViewsCountAttribute()
-    {
-        return $this->views()->count();
-    }
 }

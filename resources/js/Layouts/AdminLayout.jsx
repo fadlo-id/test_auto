@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import FlashMessage from '@/Components/FlashMessage';
 
 const NAV_ITEMS = [
     { label: 'Dashboard',      href: 'admin.dashboard',           icon: '📊' },
@@ -106,6 +107,7 @@ export default function AdminLayout({ children, title }) {
                 <main className="flex-1 p-6">
                     {children}
                 </main>
+                <FlashMessage />
             </div>
         </div>
     );

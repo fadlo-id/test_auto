@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import FlashMessage from '@/Components/FlashMessage';
 
 const NAV = [
     { label: 'Tableau de bord', href: 'user.dashboard',  icon: '🏠' },
@@ -71,6 +72,7 @@ export default function UserLayout({ children, title }) {
                     </Link>
                 </header>
                 <main className="flex-1 p-6">{children}</main>
+                <FlashMessage />
             </div>
         </div>
     );

@@ -73,13 +73,19 @@ function CheckoutModal({ plan, onClose, stripeKey }) {
         try {
             const resp = await fetch(route('school.payment.intent'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                    'Accept': 'application/json',
+                },
                 body: JSON.stringify({ plan_id: plan.id }),
             });
-            const { client_secret, error: apiError } = await resp.json();
-            if (apiError) { setError(apiError); setProcessing(false); return; }
+            const json = await resp.json();
+            if (!resp.ok || json.error) { setError(json.error ?? 'Erreur serveur.'); setProcessing(false); return; }
 
-            const { error: stripeError } = await stripe.confirmCardPayment(client_secret, {
+            const { client_secret } = json;
+
+            const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(client_secret, {
                 payment_method: { card: cardEl },
             });
 
@@ -87,13 +93,14 @@ function CheckoutModal({ plan, onClose, stripeKey }) {
                 setError(stripeError.message);
                 setProcessing(false);
             } else {
+                // Use the actual payment_intent.id from Stripe response — not a string split
                 window.location.href = route('school.payment.success', {
-                    payment_intent: client_secret.split('_secret')[0],
+                    payment_intent: paymentIntent.id,
                     plan_id: plan.id,
                 });
             }
         } catch (e) {
-            setError('Une erreur est survenue. Veuillez reessayer.');
+            setError('Une erreur est survenue. Veuillez réessayer.');
             setProcessing(false);
         }
     };

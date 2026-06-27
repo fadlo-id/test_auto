@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import FlashMessage from '@/Components/FlashMessage';
 
 const NAV_ITEMS = [
     { label: 'Vue d\'ensemble', href: 'school.dashboard',    icon: '📊' },
@@ -90,6 +91,7 @@ export default function SchoolLayout({ children, title, school }) {
                     )}
                 </header>
                 <main className="flex-1 p-6">{children}</main>
+                <FlashMessage />
             </div>
         </div>
     );

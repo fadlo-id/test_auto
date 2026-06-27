@@ -78,7 +78,23 @@ class NotificationService
 
     public function notifyNewReview(AutoSchool $school): void
     {
-        // Log only — school owners check their dashboard
+        $owner = $school->user;
         Log::info("New review pending for school #{$school->id} ({$school->name})");
+
+        if (! $owner?->email) {
+            return;
+        }
+
+        try {
+            $dashboardUrl = route('school.reviews');
+            Mail::raw(
+                "Bonjour {$owner->name},\n\nUn nouvel avis a été soumis pour votre auto-école \"{$school->name}\" et est en attente de validation par notre équipe.\n\nConsultez votre tableau de bord :\n{$dashboardUrl}\n\nCordialement,\nL'équipe AutoEcoles.ma",
+                fn ($msg) => $msg
+                    ->to($owner->email, $owner->name)
+                    ->subject("Nouvel avis soumis — {$school->name}")
+            );
+        } catch (\Exception $e) {
+            Log::warning("Failed to send new review notification school #{$school->id}: {$e->getMessage()}");
+        }
     }
 }

@@ -7,16 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class ContactRequest extends Model
 {
     protected $fillable = [
-        'auto_school_id',
         'name',
         'email',
-        'phone',
+        'subject',
         'message',
-        'status'
+        'status',
+        'replied_at',
     ];
 
-    public function autoSchool()
-    {
-        return $this->belongsTo(AutoSchool::class);
-    }
+    protected $casts = [
+        'replied_at' => 'datetime',
+    ];
 }

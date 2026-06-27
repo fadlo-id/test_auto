@@ -34,6 +34,13 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name
 
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', function () {
+    $appUrl = rtrim(config('app.url'), '/');
+    return response(
+        "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /school/\nDisallow: /user/\nDisallow: /dashboard\nDisallow: /profile\nDisallow: /login\nDisallow: /register\nDisallow: /stripe/\nDisallow: /api/\n\nSitemap: {$appUrl}/sitemap.xml\n",
+        200, ['Content-Type' => 'text/plain']
+    );
+})->name('robots');
 
 // Routes publiques
 Route::get('/', [HomeController::class, 'index'])->name('home');
