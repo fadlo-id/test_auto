@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -79,8 +80,8 @@ class SearchController extends Controller
 
         $schools = $query->paginate(12)->withQueryString();
 
-        $cities     = AutoSchool::active()->select('city')->distinct()->orderBy('city')->pluck('city');
-        $categories = Category::all(['id', 'name', 'code']);
+        $cities     = Cache::remember('search_cities', now()->addHour(), fn () => AutoSchool::active()->select('city')->distinct()->orderBy('city')->pluck('city'));
+        $categories = Cache::remember('search_categories', now()->addDay(), fn () => Category::all(['id', 'name', 'code']));
 
         return Inertia::render('SearchPage', [
             'schools'    => $schools,

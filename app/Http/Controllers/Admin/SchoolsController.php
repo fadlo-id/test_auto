@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,6 +39,8 @@ class SchoolsController extends Controller
         ]);
 
         $this->notifications->notifySchoolApproved($school);
+        Cache::forget('home_page_data');
+        Cache::forget('search_cities');
 
         return back()->with('success', "Auto-ecole \"{$school->name}\" approuvee.");
     }
