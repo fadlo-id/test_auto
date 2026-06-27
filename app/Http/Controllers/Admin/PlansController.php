@@ -60,6 +60,14 @@ class PlansController extends Controller
             'is_active'       => 'boolean',
         ]);
 
+        $validated['features'] = [
+            'listing'   => true,
+            'reviews'   => true,
+            'analytics' => (bool) $request->input('analytics', false),
+            'featured'  => (bool) $request->input('featured', false),
+            'support'   => (bool) $request->input('support', false),
+        ];
+
         $plan->update($validated);
 
         return back()->with('success', 'Plan mis à jour.');

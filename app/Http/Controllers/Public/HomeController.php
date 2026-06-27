@@ -31,7 +31,10 @@ class HomeController extends Controller
                 ->orderBy('city')
                 ->pluck('city');
 
-            $categories = Category::withCount(['autoSchools as schools_count' => fn ($q) => $q->active()])
+            $categories = Category::withCount(['autoSchools as schools_count' => fn ($q) => $q
+                    ->where('is_active', true)
+                    ->where('status', 'approved')
+                    ->whereNull('deleted_at')])
                 ->orderByDesc('schools_count')
                 ->take(8)
                 ->get(['id', 'name_fr', 'name_ar', 'code']);

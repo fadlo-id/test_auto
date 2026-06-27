@@ -19,7 +19,7 @@ class DashboardController extends Controller
                 ->with('warning', 'Veuillez créer votre auto-école pour accéder au tableau de bord.');
         }
 
-        $school->load(['subscription.plan', 'services']);
+        $school->loadCount('services')->load(['subscription.plan']);
 
         $reviewStats = $school->reviews()
             ->selectRaw('

@@ -24,11 +24,7 @@ export default function Reviews({ reviews, filters }) {
         router.get(route('user.reviews'), s === 'all' ? {} : { status: s }, { preserveState: true });
     };
 
-    const deleteReview = (id) => {
-        if (confirm('Supprimer cet avis définitivement ?')) {
-            router.delete(route('school.detail.review', id), { preserveScroll: true });
-        }
-    };
+    // Reviews cannot be deleted from user portal — they can be managed from the school detail page
 
     return (
         <UserLayout title="Mes avis">

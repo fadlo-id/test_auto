@@ -5,7 +5,7 @@ const NAV = [
     { label: 'Tableau de bord', href: 'user.dashboard',  icon: '🏠' },
     { label: 'Mes avis',        href: 'user.reviews',    icon: '⭐' },
     { label: 'Favoris',         href: 'user.favorites',  icon: '❤️' },
-    { label: 'Mon profil',      href: 'profile.edit',    icon: '👤' },
+    { label: 'Mon profil',      href: 'user.profile',    icon: '👤' },
 ];
 
 export default function UserLayout({ children, title }) {

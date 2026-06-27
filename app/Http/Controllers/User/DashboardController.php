@@ -12,11 +12,15 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        $reviewCounts = $user->reviews()
+            ->selectRaw('COUNT(*) as total, SUM(status="pending") as pending, SUM(status="approved") as approved')
+            ->first();
+
         $stats = [
-            'total_reviews'   => $user->reviews()->count(),
-            'pending_reviews' => $user->reviews()->where('status', 'pending')->count(),
-            'approved_reviews'=> $user->reviews()->where('status', 'approved')->count(),
-            'favorites'       => $user->favorites()->count(),
+            'total_reviews'    => (int) ($reviewCounts->total ?? 0),
+            'pending_reviews'  => (int) ($reviewCounts->pending ?? 0),
+            'approved_reviews' => (int) ($reviewCounts->approved ?? 0),
+            'favorites'        => $user->favorites()->count(),
         ];
 
         $recentReviews = $user->reviews()

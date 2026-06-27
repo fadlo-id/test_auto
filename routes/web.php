@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reviews',    [UserReviews::class,   'index'])->name('reviews');
         Route::get('/favorites',  [UserFavorites::class, 'index'])->name('favorites');
         Route::post('/favorites/{school}', [UserFavorites::class, 'toggle'])->name('favorites.toggle');
+        Route::get('/profile',    fn () => \Inertia\Inertia::render('UserDashboard/Profile'))->name('profile');
     });
 
     // ── Admin routes ─────────────────────────────────────────

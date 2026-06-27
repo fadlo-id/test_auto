@@ -33,9 +33,24 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
-    public function isActive()
+    public function isActive(): bool
     {
-        return $this->status === 'active' && $this->expires_at > now();
+        return $this->status === 'active' && $this->expires_at?->isFuture();
+    }
+
+    public function cancel(string $reason = ''): static
+    {
+        $this->update([
+            'status'              => 'cancelled',
+            'cancellation_reason' => $reason,
+            'cancelled_at'        => now(),
+        ]);
+        return $this;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active')->where('expires_at', '>', now());
     }
 
     public function payments()

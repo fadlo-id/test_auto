@@ -12,11 +12,19 @@ class PaymentService
 {
     public function __construct()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $key = config('services.stripe.secret');
+        if ($key) {
+            Stripe::setApiKey($key);
+        }
     }
 
     public function createPaymentIntent(AutoSchool $school, Plan $plan): PaymentIntent
     {
+        $key = config('services.stripe.secret');
+        if (! $key) {
+            throw new \RuntimeException('Stripe non configuré. Ajoutez STRIPE_SECRET dans votre .env');
+        }
+
         return PaymentIntent::create([
             'amount'   => (int) ($plan->price * 100),
             'currency' => strtolower($plan->currency ?? 'mad'),
