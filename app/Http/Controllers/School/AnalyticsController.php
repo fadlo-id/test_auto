@@ -27,7 +27,7 @@ class AnalyticsController extends Controller
         $comparison = $this->analytics->getComparison($school, $days);
 
         return Inertia::render('SchoolDashboard/Analytics', [
-            'school'     => $school->only('id', 'name'),
+            'school'     => $school->only('id', 'name', 'city', 'status'),
             'analytics'  => $data,
             'comparison' => $comparison,
             'days'       => $days,

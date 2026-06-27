@@ -53,9 +53,9 @@ php artisan db:seed        # seeder (admin + school_owner + user de test)
 ### Seeder (comptes de test)
 
 ```
-admin@example.com   / password  — role: admin
-owner@example.com   / password  — role: school_owner
-user@example.com    / password  — role: user
+admin@autoecoles.ma   / Admin@2026!  — role: admin
+ecole@autoecoles.ma   / password     — role: school_owner (demo school pre-approved)
+user@autoecoles.ma    / password     — role: user
 ```
 
 ## Cache

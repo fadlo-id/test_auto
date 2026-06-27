@@ -18,9 +18,16 @@ function PlanCard({ plan, isActive, onSelect, loading }) {
             {plan.description && <p className="text-sm text-gray-500 mb-4">{plan.description}</p>}
             {plan.features && (
                 <ul className="space-y-1 mb-4">
-                    {(Array.isArray(plan.features) ? plan.features : Object.values(plan.features)).map((f, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                            <span className="text-green-500">✓</span> {f}
+                    {(Array.isArray(plan.features)
+                        ? plan.features.map((f, i) => ({ label: String(f), enabled: true, key: i }))
+                        : Object.entries(plan.features).map(([k, v]) => ({
+                            label: { listing: 'Listing public', reviews: 'Gestion des avis', analytics: 'Analytics avancées', featured: 'Mise en avant', support: 'Support prioritaire' }[k] ?? k,
+                            enabled: v === true || (typeof v === 'number' && v > 0),
+                            key: k,
+                          }))
+                    ).map(({ label, enabled, key }) => (
+                        <li key={key} className={`flex items-center gap-2 text-sm ${enabled ? 'text-gray-700' : 'text-gray-400 line-through'}`}>
+                            <span className={enabled ? 'text-green-500' : 'text-gray-300'}>✓</span> {label}
                         </li>
                     ))}
                 </ul>

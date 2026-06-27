@@ -34,6 +34,7 @@ class SchoolsController extends Controller
     {
         $school->update([
             'status'           => 'approved',
+            'is_active'        => true,
             'verified_at'      => now(),
             'rejection_reason' => null,
         ]);

@@ -30,7 +30,7 @@ class ReviewsController extends Controller
             ->withQueryString();
 
         return Inertia::render('SchoolDashboard/Reviews', [
-            'school'  => $school->only('id', 'name'),
+            'school'  => $school->only('id', 'name', 'city', 'status'),
             'reviews' => $reviews,
             'filters' => $request->only(['status']),
         ]);

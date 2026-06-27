@@ -51,7 +51,7 @@ class SchoolOwnerTest extends TestCase
                 'name'        => 'Permis B',
                 'price'       => 2500,
                 'description'    => 'Formation complete permis B',
-                'duration_hours' => 30,
+                'duration' => 30,
             ])
             ->assertRedirect();
 

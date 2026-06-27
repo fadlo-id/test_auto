@@ -40,7 +40,7 @@ export default function Settings({ school, categories }) {
             : {
                 name: '', description: '', email: '', phone: '', address: '', city: '',
                 region: '', license_number: '', established_year: '', website_url: '',
-                facebook_url: '', instagram_url: '', categories: [],
+                facebook_url: '', instagram_url: '', latitude: '', longitude: '', categories: [],
             }
     );
 
@@ -160,7 +160,7 @@ export default function Settings({ school, categories }) {
                                             : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'
                                     }`}
                                 >
-                                    {cat.name}
+                                    {cat.name_fr ?? cat.code}
                                 </button>
                             ))}
                         </div>

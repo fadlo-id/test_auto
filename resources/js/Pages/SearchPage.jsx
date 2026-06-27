@@ -132,7 +132,7 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
                                             <select value={filters.category} onChange={update('category')}
                                                 className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
                                                 <option value="">Tous</option>
-                                                {categories.map((c) => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
+                                                {categories.map((c) => <option key={c.id} value={c.id}>{c.code} — {c.name_fr}</option>)}
                                             </select>
                                         </div>
                                     )}

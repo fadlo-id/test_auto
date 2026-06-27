@@ -45,7 +45,7 @@ class SubscriptionController extends Controller
             ->get(['id', 'plan_id', 'amount', 'currency', 'status', 'created_at']);
 
         return Inertia::render('SchoolDashboard/Subscription', [
-            'school'       => $school->only('id', 'name'),
+            'school'       => $school->only('id', 'name', 'city', 'status'),
             'subscription' => $school->subscription?->load('plan'),
             'plans'        => $plans,
             'payments'     => $payments,

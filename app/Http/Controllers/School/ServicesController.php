@@ -21,7 +21,7 @@ class ServicesController extends Controller
         }
 
         return Inertia::render('SchoolDashboard/Services', [
-            'school'   => $school->only('id', 'name'),
+            'school'   => $school->only('id', 'name', 'city', 'status'),
             'services' => $school->services()->get(),
         ]);
     }

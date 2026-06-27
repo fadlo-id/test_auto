@@ -14,7 +14,7 @@ class ServiceFactory extends Factory
             'name'           => fake()->randomElement(['Permis B', 'Permis A', 'Code de la route', 'Conduite accompagnee']),
             'description'    => fake()->sentence(),
             'price'          => fake()->numberBetween(1500, 5000),
-            'duration_hours' => fake()->numberBetween(10, 50),
+            'duration' => fake()->numberBetween(10, 50),
             'is_active'      => true,
         ];
     }
