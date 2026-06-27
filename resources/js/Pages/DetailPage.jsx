@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 function SchoolJsonLd({ school }) {
@@ -83,9 +83,22 @@ function ReviewCard({ review }) {
     );
 }
 
-export default function DetailPage({ school, ratingBreakdown = {}, canReview = false }) {
+export default function DetailPage({ school, ratingBreakdown = {}, canReview = false, isFavorited = false }) {
     const { auth, flash } = usePage().props;
     const [showForm, setShowForm] = useState(false);
+    const [favorited, setFavorited] = useState(isFavorited);
+    const [favLoading, setFavLoading] = useState(false);
+    const [lightboxImg, setLightboxImg] = useState(null);
+
+    const toggleFavorite = () => {
+        if (!auth?.user) { router.visit(route('login')); return; }
+        setFavLoading(true);
+        router.post(route('user.favorites.toggle', school.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => { setFavorited(f => !f); setFavLoading(false); },
+            onError:   () => setFavLoading(false),
+        });
+    };
 
     const { data, setData, post, processing, errors, reset } = useForm({
         rating: 5,
@@ -152,15 +165,26 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                     ? <img src={`/storage/${school.logo_url}`} alt="" className="w-full h-full object-cover" />
                                     : <span className="text-orange-400 text-3xl">🚗</span>}
                             </div>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{school.name}</h1>
-                                <p className="text-gray-500 text-sm mb-2">📍 {school.address}, {school.city}</p>
-                                <div className="flex items-center gap-2">
-                                    <StarRating value={school.average_rating} />
-                                    <span className="text-sm text-gray-600">
-                                        {Number(school.average_rating ?? 0).toFixed(1)}/5
-                                    </span>
-                                    <span className="text-sm text-gray-400">({totalReviews} avis)</span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{school.name}</h1>
+                                        <p className="text-gray-500 text-sm mb-2">📍 {school.address}, {school.city}</p>
+                                        <div className="flex items-center gap-2">
+                                            <StarRating value={school.average_rating} />
+                                            <span className="text-sm text-gray-600">
+                                                {Number(school.average_rating ?? 0).toFixed(1)}/5
+                                            </span>
+                                            <span className="text-sm text-gray-400">({totalReviews} avis)</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={toggleFavorite} disabled={favLoading}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                                            favorited ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                                        }`}>
+                                        <span className="text-base">{favorited ? '❤️' : '🤍'}</span>
+                                        <span className="hidden sm:inline">{favorited ? 'Favori' : 'Ajouter'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -200,6 +224,27 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                             </div>
                                             {service.description && <p className="text-xs text-gray-500">{service.description}</p>}
                                         </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Gallery */}
+                        {school.photos?.length > 0 && (
+                            <div className="bg-white rounded-xl border border-gray-100 p-5">
+                                <h2 className="font-semibold text-gray-900 mb-3">Galerie ({school.photos.length})</h2>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {school.photos.slice(0, 6).map((photo, i) => (
+                                        <button key={photo.id} onClick={() => setLightboxImg(`/storage/${photo.path}`)}
+                                            className="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity relative">
+                                            <img src={`/storage/${photo.path}`} alt={photo.caption ?? ''}
+                                                className="w-full h-full object-cover" loading="lazy" />
+                                            {i === 5 && school.photos.length > 6 && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg">
+                                                    +{school.photos.length - 6}
+                                                </div>
+                                            )}
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -331,6 +376,15 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                     <p className="text-xs">© 2026 AutoEcoles.ma — Tous droits reserves.</p>
                 </div>
             </footer>
+
+            {/* Lightbox */}
+            {lightboxImg && (
+                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                    onClick={() => setLightboxImg(null)}>
+                    <img src={lightboxImg} alt="" className="max-w-full max-h-full rounded-xl object-contain" />
+                    <button className="absolute top-4 right-4 text-white text-3xl leading-none hover:text-gray-300">✕</button>
+                </div>
+            )}
         </>
     );
 }

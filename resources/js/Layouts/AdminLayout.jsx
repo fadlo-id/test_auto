@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 
 const NAV_ITEMS = [
-    { label: 'Dashboard', href: 'admin.dashboard', icon: '📊' },
-    { label: 'Utilisateurs', href: 'admin.users.index', icon: '👥' },
-    { label: 'Auto-écoles', href: 'admin.auto-schools.index', icon: '🏫' },
-    { label: 'Avis', href: 'admin.reviews.index', icon: '⭐' },
-    { label: 'Abonnements', href: 'admin.subscriptions.index', icon: '📋' },
-    { label: 'Paiements', href: 'admin.payments.index', icon: '💳' },
-    { label: 'Analytics', href: 'admin.analytics', icon: '📈' },
+    { label: 'Dashboard',      href: 'admin.dashboard',           icon: '📊' },
+    { label: 'Utilisateurs',   href: 'admin.users.index',         icon: '👥' },
+    { label: 'Auto-écoles',    href: 'admin.auto-schools.index',  icon: '🏫' },
+    { label: 'Avis',           href: 'admin.reviews.index',       icon: '⭐' },
+    { label: 'Abonnements',    href: 'admin.subscriptions.index', icon: '📋' },
+    { label: 'Paiements',      href: 'admin.payments.index',      icon: '💳' },
+    { label: 'Catégories',     href: 'admin.categories.index',    icon: '🏷️' },
+    { label: 'Plans',          href: 'admin.plans.index',         icon: '💎' },
+    { label: 'Analytics',      href: 'admin.analytics',           icon: '📈' },
 ];
 
 export default function AdminLayout({ children, title }) {

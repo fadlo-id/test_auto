@@ -20,6 +20,7 @@ class SchoolDetailController extends Controller
             ->with([
                 'categories:id,name_fr,name_ar,code',
                 'services',
+                'photos',
                 'reviews' => fn ($q) => $q->where('status', 'approved')->with('user:id,name')->latest()->take(20),
             ])
             ->withAvg('reviews as average_rating', 'rating')
@@ -35,10 +36,14 @@ class SchoolDetailController extends Controller
             ->pluck('count', 'rating')
             ->toArray();
 
+        $isFavorited = auth()->check()
+            && auth()->user()->favorites()->where('auto_school_id', $school->id)->exists();
+
         return Inertia::render('DetailPage', [
             'school'          => $school,
             'ratingBreakdown' => $ratingBreakdown,
             'canReview'       => auth()->check() && ! $school->reviews()->where('user_id', auth()->id())->exists(),
+            'isFavorited'     => $isFavorited,
         ]);
     }
 }

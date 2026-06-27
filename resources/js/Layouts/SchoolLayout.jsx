@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 
 const NAV_ITEMS = [
-    { label: 'Vue d\'ensemble', href: 'school.dashboard', icon: '📊' },
-    { label: 'Analytics', href: 'school.analytics', icon: '📈' },
-    { label: 'Avis', href: 'school.reviews', icon: '⭐' },
-    { label: 'Services', href: 'school.services', icon: '📋' },
-    { label: 'Abonnement', href: 'school.subscription', icon: '💳' },
-    { label: 'Paramètres', href: 'school.settings', icon: '⚙️' },
+    { label: 'Vue d\'ensemble', href: 'school.dashboard',    icon: '📊' },
+    { label: 'Analytics',       href: 'school.analytics',    icon: '📈' },
+    { label: 'Avis',            href: 'school.reviews',      icon: '⭐' },
+    { label: 'Services',        href: 'school.services',     icon: '📋' },
+    { label: 'Galerie',         href: 'school.gallery',      icon: '📷' },
+    { label: 'Abonnement',      href: 'school.subscription', icon: '💳' },
+    { label: 'Paramètres',      href: 'school.settings',     icon: '⚙️' },
 ];
 
 export default function SchoolLayout({ children, title, school }) {

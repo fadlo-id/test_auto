@@ -122,6 +122,16 @@ class AutoSchool extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function photos()
+    {
+        return $this->hasMany(SchoolPhoto::class)->orderBy('sort_order');
+    }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'user_favorites');
+    }
+
     public function activeSubscription()
     {
         return $this->hasOne(Subscription::class)
