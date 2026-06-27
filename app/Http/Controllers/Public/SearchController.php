@@ -16,7 +16,7 @@ class SearchController extends Controller
     public function index(Request $request): Response
     {
         $query = AutoSchool::active()
-            ->with('categories:id,name,code')
+            ->with('categories:id,name_fr,name_ar,code')
             ->withAvg('reviews as average_rating', 'rating')
             ->withCount(['reviews' => fn ($q) => $q->where('status', 'approved')]);
 
@@ -81,7 +81,7 @@ class SearchController extends Controller
         $schools = $query->paginate(12)->withQueryString();
 
         $cities     = Cache::remember('search_cities', now()->addHour(), fn () => AutoSchool::active()->select('city')->distinct()->orderBy('city')->pluck('city'));
-        $categories = Cache::remember('search_categories', now()->addDay(), fn () => Category::all(['id', 'name', 'code']));
+        $categories = Cache::remember('search_categories', now()->addDay(), fn () => Category::all(['id', 'name_fr', 'name_ar', 'code']));
 
         return Inertia::render('SearchPage', [
             'schools'    => $schools,

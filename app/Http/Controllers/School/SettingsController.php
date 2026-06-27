@@ -18,7 +18,7 @@ class SettingsController extends Controller
     public function index(): Response
     {
         $school = auth()->user()->autoSchool;
-        $categories = Category::all(['id', 'name', 'slug']);
+        $categories = Category::all(['id', 'name_fr', 'name_ar', 'code']);
 
         return Inertia::render('SchoolDashboard/Settings', [
             'school'     => $school?->load('categories'),

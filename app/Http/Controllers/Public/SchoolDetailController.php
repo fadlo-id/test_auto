@@ -18,7 +18,7 @@ class SchoolDetailController extends Controller
         $school = AutoSchool::active()
             ->where('slug', $slug)
             ->with([
-                'categories:id,name,code',
+                'categories:id,name_fr,name_ar,code',
                 'services',
                 'reviews' => fn ($q) => $q->where('status', 'approved')->with('user:id,name')->latest()->take(20),
             ])

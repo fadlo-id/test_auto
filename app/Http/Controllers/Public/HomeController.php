@@ -17,7 +17,7 @@ class HomeController extends Controller
     {
         [$featured, $cities, $categories, $plans, $stats] = Cache::remember('home_page_data', now()->addMinutes(30), function () {
             $featured = AutoSchool::active()
-                ->with('categories:id,name,code')
+                ->with('categories:id,name_fr,name_ar,code')
                 ->withAvg('reviews as average_rating', 'rating')
                 ->withCount(['reviews' => fn ($q) => $q->where('status', 'approved')])
                 ->where(fn ($q) => $q->where('featured_until', '>=', now())->orWhereNull('featured_until'))
@@ -34,7 +34,7 @@ class HomeController extends Controller
             $categories = Category::withCount(['autoSchools as schools_count' => fn ($q) => $q->active()])
                 ->orderByDesc('schools_count')
                 ->take(8)
-                ->get(['id', 'name', 'code']);
+                ->get(['id', 'name_fr', 'name_ar', 'code']);
 
             $plans = Plan::where('is_active', true)
                 ->get(['id', 'name', 'price', 'billing_period', 'description', 'features']);
