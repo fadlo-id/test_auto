@@ -1,6 +1,44 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
+function SchoolJsonLd({ school }) {
+    const rating = school.average_rating ?? 0;
+    const count  = school.reviews_count ?? school.review_count ?? 0;
+    const data   = {
+        '@context': 'https://schema.org',
+        '@type':    'DrivingSchool',
+        name:       school.name,
+        description: school.description,
+        address: {
+            '@type':           'PostalAddress',
+            streetAddress:     school.address,
+            addressLocality:   school.city,
+            addressRegion:     school.region ?? '',
+            addressCountry:    'MA',
+        },
+        telephone: school.phone,
+        email:     school.email,
+        url:       school.website_url,
+        ...(school.latitude && school.longitude && {
+            geo: {
+                '@type':    'GeoCoordinates',
+                latitude:   school.latitude,
+                longitude:  school.longitude,
+            },
+        }),
+        ...(count > 0 && {
+            aggregateRating: {
+                '@type':       'AggregateRating',
+                ratingValue:   Number(rating).toFixed(1),
+                reviewCount:   count,
+                bestRating:    5,
+                worstRating:   1,
+            },
+        }),
+    };
+    return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+}
+
 function StarRating({ value = 0, interactive = false, onChange }) {
     const [hover, setHover] = useState(0);
     const display = interactive ? (hover || value) : Math.round(value);
@@ -65,9 +103,19 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
     const phone = school.phone?.replace(/\s/g, '') ?? '';
     const totalReviews = school.reviews_count ?? school.review_count ?? 0;
 
+    const desc = school.description
+        ? school.description.slice(0, 155)
+        : `Auto-ecole ${school.name} a ${school.city} - ${totalReviews} avis verifies sur AutoEcoles.ma`;
+
     return (
         <>
-            <Head title={school.name} />
+            <Head title={`${school.name} — Auto-ecole ${school.city}`}>
+                <meta name="description" content={desc} />
+                <meta property="og:title" content={`${school.name} — Auto-ecole ${school.city}`} />
+                <meta property="og:description" content={desc} />
+                {school.banner_url && <meta property="og:image" content={`/storage/${school.banner_url}`} />}
+                <SchoolJsonLd school={school} />
+            </Head>
 
             {/* Navbar */}
             <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
