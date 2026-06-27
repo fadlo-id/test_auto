@@ -4,7 +4,6 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
-use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,17 +22,22 @@ class FavoritesController extends Controller
         ]);
     }
 
-    public function toggle(AutoSchool $school): JsonResponse
+    public function toggle(AutoSchool $school): \Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
-        $user = auth()->user();
+        $user   = auth()->user();
         $exists = $user->favorites()->where('auto_school_id', $school->id)->exists();
 
         if ($exists) {
             $user->favorites()->where('auto_school_id', $school->id)->delete();
-            return response()->json(['favorited' => false, 'message' => 'Retiré des favoris']);
+        } else {
+            $user->favorites()->create(['auto_school_id' => $school->id]);
         }
 
-        $user->favorites()->create(['auto_school_id' => $school->id]);
-        return response()->json(['favorited' => true, 'message' => 'Ajouté aux favoris']);
+        // Inertia uses back() for preserveScroll; JSON for XHR callers
+        if (request()->header('X-Inertia')) {
+            return back();
+        }
+
+        return response()->json(['favorited' => ! $exists]);
     }
 }

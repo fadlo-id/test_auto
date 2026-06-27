@@ -93,10 +93,13 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
     const toggleFavorite = () => {
         if (!auth?.user) { router.visit(route('login')); return; }
         setFavLoading(true);
+        // Optimistic update; Inertia partial reload will sync the real state
+        setFavorited(f => !f);
         router.post(route('user.favorites.toggle', school.id), {}, {
             preserveScroll: true,
-            onSuccess: () => { setFavorited(f => !f); setFavLoading(false); },
-            onError:   () => setFavLoading(false),
+            only: ['isFavorited'],
+            onError:   () => { setFavorited(f => !f); setFavLoading(false); },
+            onFinish:  () => setFavLoading(false),
         });
     };
 
