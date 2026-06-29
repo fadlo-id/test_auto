@@ -27,9 +27,9 @@ class StoreAutoSchoolRequest extends FormRequest
             'longitude'        => 'nullable|numeric|between:-180,180',
             'license_number'   => 'required|string|max:100|unique:auto_schools,license_number',
             'established_year' => 'nullable|integer|min:1900|max:' . date('Y'),
-            'website_url'      => 'nullable|url|max:255',
-            'facebook_url'     => 'nullable|url|max:255',
-            'instagram_url'    => 'nullable|url|max:255',
+            'website_url'      => ['nullable', 'url', 'max:255', 'regex:/^https?:\/\//i'],
+            'facebook_url'     => ['nullable', 'url', 'max:255', 'regex:/^https?:\/\//i'],
+            'instagram_url'    => ['nullable', 'url', 'max:255', 'regex:/^https?:\/\//i'],
             'categories'       => 'required|array|min:1',
             'categories.*'     => 'exists:categories,id',
         ];

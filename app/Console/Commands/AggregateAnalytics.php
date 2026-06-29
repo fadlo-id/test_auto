@@ -22,12 +22,11 @@ class AggregateAnalytics extends Command
 
         $this->info("Aggregating analytics for {$date->format('Y-m-d')}");
 
-        // Get all schools
-        $schools = AutoSchool::all();
-
-        foreach ($schools as $school) {
-            $this->aggregateDailyStats($school, $date);
-        }
+        AutoSchool::chunk(500, function ($schools) use ($date) {
+            foreach ($schools as $school) {
+                $this->aggregateDailyStats($school, $date);
+            }
+        });
 
         $this->aggregateMonthlyStats($date);
 
@@ -80,8 +79,7 @@ class AggregateAnalytics extends Command
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->get();
 
-        $newLeads = $leadEvents->where('status', 'new')->count();
-        $contactedLeads = $leadEvents->where('status', 'contacted')->count();
+        $newLeads       = $leadEvents->count();
         $convertedLeads = $leadEvents->where('status', 'converted')->count();
 
         // Create or update daily stat
@@ -101,15 +99,14 @@ class AggregateAnalytics extends Command
                 'email_clicks' => $clicksByType->get('email', 0),
                 'maps_clicks' => $clicksByType->get('maps', 0),
                 'total_clicks' => $totalClicks,
-                'desktop_views' => $deviceBreakdown->get('Desktop', 0),
-                'mobile_views' => $deviceBreakdown->get('Mobile', 0),
-                'tablet_views' => $deviceBreakdown->get('Tablet', 0),
+                'desktop_views' => $deviceBreakdown->get('desktop', 0),
+                'mobile_views' => $deviceBreakdown->get('mobile', 0),
+                'tablet_views' => $deviceBreakdown->get('tablet', 0),
                 'direct_traffic' => $trafficSources->get('direct', 0),
                 'organic_traffic' => $trafficSources->get('organic', 0),
                 'referral_traffic' => $trafficSources->get('referral', 0),
                 'paid_traffic' => $trafficSources->get('paid', 0),
                 'new_leads' => $newLeads,
-                'contacted_leads' => $contactedLeads,
                 'converted_leads' => $convertedLeads,
             ]
         );
@@ -128,49 +125,46 @@ class AggregateAnalytics extends Command
         $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endOfMonth = Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
-        $schools = AutoSchool::all();
+        AutoSchool::chunk(500, function ($schools) use ($month, $year, $startOfMonth, $endOfMonth) {
+            foreach ($schools as $school) {
+                $dailyStats = AnalyticsDailyStat::forSchool($school->id)
+                    ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                    ->get();
 
-        foreach ($schools as $school) {
-            // Get all daily stats for the month
-            $dailyStats = AnalyticsDailyStat::forSchool($school->id)
-                ->whereBetween('date', [$startOfMonth, $endOfMonth])
-                ->get();
+                if ($dailyStats->isEmpty()) {
+                    continue;
+                }
 
-            if ($dailyStats->isEmpty()) {
-                continue;
+                AnalyticsMonthStat::updateOrCreate(
+                    [
+                        'auto_school_id' => $school->id,
+                        'month' => $month,
+                        'year' => $year,
+                    ],
+                    [
+                        'total_views'      => $dailyStats->sum('total_views'),
+                        'unique_visitors'  => $dailyStats->sum('unique_visitors'),
+                        'phone_clicks'     => $dailyStats->sum('phone_clicks'),
+                        'whatsapp_clicks'  => $dailyStats->sum('whatsapp_clicks'),
+                        'website_clicks'   => $dailyStats->sum('website_clicks'),
+                        'facebook_clicks'  => $dailyStats->sum('facebook_clicks'),
+                        'instagram_clicks' => $dailyStats->sum('instagram_clicks'),
+                        'email_clicks'     => $dailyStats->sum('email_clicks'),
+                        'maps_clicks'      => $dailyStats->sum('maps_clicks'),
+                        'total_clicks'     => $dailyStats->sum('total_clicks'),
+                        'desktop_views'    => $dailyStats->sum('desktop_views'),
+                        'mobile_views'     => $dailyStats->sum('mobile_views'),
+                        'tablet_views'     => $dailyStats->sum('tablet_views'),
+                        'direct_traffic'   => $dailyStats->sum('direct_traffic'),
+                        'organic_traffic'  => $dailyStats->sum('organic_traffic'),
+                        'referral_traffic' => $dailyStats->sum('referral_traffic'),
+                        'paid_traffic'     => $dailyStats->sum('paid_traffic'),
+                        'new_leads'        => $dailyStats->sum('new_leads'),
+                        'converted_leads'  => $dailyStats->sum('converted_leads'),
+                    ]
+                );
             }
-
-            // Aggregate daily stats into monthly
-            AnalyticsMonthStat::updateOrCreate(
-                [
-                    'auto_school_id' => $school->id,
-                    'month' => $month,
-                    'year' => $year,
-                ],
-                [
-                    'total_views' => $dailyStats->sum('total_views'),
-                    'unique_visitors' => $dailyStats->sum('unique_visitors'),
-                    'phone_clicks' => $dailyStats->sum('phone_clicks'),
-                    'whatsapp_clicks' => $dailyStats->sum('whatsapp_clicks'),
-                    'website_clicks' => $dailyStats->sum('website_clicks'),
-                    'facebook_clicks' => $dailyStats->sum('facebook_clicks'),
-                    'instagram_clicks' => $dailyStats->sum('instagram_clicks'),
-                    'email_clicks' => $dailyStats->sum('email_clicks'),
-                    'maps_clicks' => $dailyStats->sum('maps_clicks'),
-                    'total_clicks' => $dailyStats->sum('total_clicks'),
-                    'desktop_views' => $dailyStats->sum('desktop_views'),
-                    'mobile_views' => $dailyStats->sum('mobile_views'),
-                    'tablet_views' => $dailyStats->sum('tablet_views'),
-                    'direct_traffic' => $dailyStats->sum('direct_traffic'),
-                    'organic_traffic' => $dailyStats->sum('organic_traffic'),
-                    'referral_traffic' => $dailyStats->sum('referral_traffic'),
-                    'paid_traffic' => $dailyStats->sum('paid_traffic'),
-                    'new_leads' => $dailyStats->sum('new_leads'),
-                    'contacted_leads' => $dailyStats->sum('contacted_leads'),
-                    'converted_leads' => $dailyStats->sum('converted_leads'),
-                ]
-            );
-        }
+        });
 
         $this->line("  ✓ Aggregated monthly stats for {$startOfMonth->format('F Y')}");
     }
