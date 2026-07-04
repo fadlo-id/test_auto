@@ -15,6 +15,18 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_bare_register_route_renders_role_chooser(): void
+    {
+        $this->get('/register')
+            ->assertInertia(fn ($p) => $p->component('Auth/ChooseRole'));
+    }
+
+    public function test_register_with_role_query_param_renders_form(): void
+    {
+        $this->get('/register?role=school_owner')
+            ->assertInertia(fn ($p) => $p->component('Auth/Register')->where('role', 'school_owner'));
+    }
+
     public function test_new_users_can_register(): void
     {
         $response = $this->post('/register', [
@@ -27,7 +39,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('user.dashboard', absolute: false));
     }
 
     public function test_school_owner_can_register(): void

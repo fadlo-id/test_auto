@@ -27,7 +27,7 @@ const SECTIONS = [
     },
 ];
 
-export default function Privacy() {
+export default function Privacy({ content = '' }) {
     return (
         <>
             <Head>
@@ -43,6 +43,12 @@ export default function Privacy() {
                 </div>
 
                 <div className="max-w-3xl mx-auto px-4 py-12">
+                    {content && (
+                        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+                            <div className="prose prose-gray max-w-none text-sm text-gray-600 leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: content }} />
+                        </div>
+                    )}
                     <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
                         {SECTIONS.map(s => (
                             <div key={s.title} className="p-6">

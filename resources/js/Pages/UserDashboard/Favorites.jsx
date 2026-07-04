@@ -9,29 +9,35 @@ function StarRating({ value = 0 }) {
     );
 }
 
+const SCHOOL_IC = <svg className="w-5 h-5 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+const HEART_IC  = <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>;
+
 function SchoolCard({ school, onRemove }) {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:border-orange-100 hover:shadow-md transition-all">
             <div className="h-28 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden relative">
                 {school.banner_url
                     ? <img src={`/storage/${school.banner_url}`} alt={school.name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-orange-300 text-3xl">🏫</div>}
+                    : <div className="w-full h-full flex items-center justify-center">{SCHOOL_IC}</div>}
                 <button onClick={() => onRemove(school)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 shadow transition-colors"
+                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-xl flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 shadow-sm transition-colors"
                     title="Retirer des favoris">
-                    ❤️
+                    {HEART_IC}
                 </button>
             </div>
             <div className="p-4">
                 <div className="flex items-start gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-lg bg-white border border-gray-100 shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
                         {school.logo_url
                             ? <img src={`/storage/${school.logo_url}`} alt="" className="w-full h-full object-cover" />
-                            : <span className="text-orange-400 text-sm">🚗</span>}
+                            : <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
                     </div>
                     <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-gray-900 text-sm truncate">{school.name}</h3>
-                        <p className="text-xs text-gray-400">📍 {school.city}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/></svg>
+                            {school.city}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center justify-between mb-3">
@@ -41,12 +47,12 @@ function SchoolCard({ school, onRemove }) {
                 {school.categories?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-3">
                         {school.categories.map(c => (
-                            <span key={c.id} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">{c.code}</span>
+                            <span key={c.id} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">{c.code}</span>
                         ))}
                     </div>
                 )}
                 <Link href={route('school.detail', school.slug)}
-                    className="block text-center py-2 text-sm font-medium text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors">
+                    className="block text-center py-2 text-sm font-semibold text-orange-600 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors">
                     Voir les détails →
                 </Link>
             </div>
@@ -90,14 +96,16 @@ export default function Favorites({ favorites }) {
                     )}
                 </>
             ) : (
-                <div className="bg-white rounded-xl border border-gray-200 py-20 text-center">
-                    <p className="text-5xl mb-4">❤️</p>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-20 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-pink-50 flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    </div>
                     <h3 className="text-gray-900 font-semibold text-lg mb-2">Aucun favori pour le moment</h3>
                     <p className="text-gray-500 text-sm mb-6">
                         Ajoutez des auto-écoles à vos favoris pour les retrouver facilement.
                     </p>
                     <Link href={route('search')}
-                        className="inline-block px-6 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700">
+                        className="inline-block px-6 py-2.5 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 shadow-sm transition-colors">
                         Explorer les auto-écoles
                     </Link>
                 </div>

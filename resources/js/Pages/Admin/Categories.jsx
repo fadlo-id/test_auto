@@ -30,25 +30,25 @@ function CategoryForm({ initial, onSubmit, processing, errors }) {
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Code *</label>
                     <input value={data.code} onChange={set('code')} required maxLength={10}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                     {errors?.code && <p className="text-xs text-red-500 mt-1">{errors.code}</p>}
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Nom (FR) *</label>
                     <input value={data.name_fr} onChange={set('name_fr')} required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                     {errors?.name_fr && <p className="text-xs text-red-500 mt-1">{errors.name_fr}</p>}
                 </div>
             </div>
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Nom (AR)</label>
                 <input value={data.name_ar} onChange={set('name_ar')} dir="rtl"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Nom (EN)</label>
                 <input value={data.name_en} onChange={set('name_en')}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <button type="submit" disabled={processing}
                 className="w-full py-2.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50">

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
 use App\Models\Review;
+use App\Models\SiteSetting;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ReviewController extends Controller
 {
@@ -15,8 +17,12 @@ class ReviewController extends Controller
 
     public function store(Request $request, string $slug): RedirectResponse
     {
+        if (SiteSetting::get('allow_reviews', '1') === '0') {
+            return back()->with('error', 'Les avis sont temporairement désactivés.');
+        }
+
         // Rate limit: 3 reviews per hour per user
-        \Illuminate\Support\Facades\RateLimiter::attempt(
+        RateLimiter::attempt(
             'review:' . auth()->id(),
             3,
             fn () => null,
@@ -43,17 +49,24 @@ class ReviewController extends Controller
             return back()->with('error', 'Vous ne pouvez pas noter votre propre auto-ecole.');
         }
 
+        $requireApproval = SiteSetting::get('require_approval', '1') !== '0';
+        $status          = $requireApproval ? 'pending' : 'approved';
+
         Review::create([
             'auto_school_id' => $school->id,
             'user_id'        => auth()->id(),
             'rating'         => $request->rating,
             'title'          => $request->title,
             'content'        => $request->content,
-            'status'         => 'pending',
+            'status'         => $status,
         ]);
 
         $this->notifications->notifyNewReview($school);
 
-        return back()->with('success', 'Votre avis a ete soumis et est en attente de validation. Merci !');
+        $message = $requireApproval
+            ? 'Votre avis a ete soumis et est en attente de validation. Merci !'
+            : 'Votre avis a ete publié. Merci !';
+
+        return back()->with('success', $message);
     }
 }

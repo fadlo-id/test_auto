@@ -61,4 +61,49 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    public function test_unverified_user_can_browse_user_portal(): void
+    {
+        $user = User::factory()->unverified()->create(['role' => 'user']);
+
+        $this->actingAs($user)->get(route('user.dashboard'))->assertOk();
+        $this->actingAs($user)->get(route('user.reviews'))->assertOk();
+    }
+
+    public function test_unverified_school_owner_is_blocked_from_school_dashboard(): void
+    {
+        $owner = User::factory()->unverified()->create(['role' => 'school_owner']);
+
+        $this->actingAs($owner)
+            ->get(route('school.dashboard'))
+            ->assertRedirect(route('verification.notice'));
+    }
+
+    public function test_super_admin_is_always_auto_verified_regardless_of_input(): void
+    {
+        $superAdmin = User::factory()->unverified()->create(['role' => 'super_admin']);
+
+        $this->assertTrue($superAdmin->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_super_admin_can_access_admin_dashboard_even_if_created_unverified(): void
+    {
+        $superAdmin = User::factory()->unverified()->create(['role' => 'super_admin']);
+
+        // The booted() hook already re-verifies on save, but this proves the route itself
+        // never depends on that — no `verified` middleware sits on the admin group at all.
+        $this->actingAs($superAdmin)
+            ->get(route('admin.dashboard'))
+            ->assertOk();
+    }
+
+    public function test_verification_banner_prop_is_hidden_for_super_admin_on_profile_page(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $this->actingAs($superAdmin)
+            ->get(route('profile.edit'))
+            ->assertInertia(fn ($p) => $p->where('auth.user.role', 'super_admin')
+                ->where('auth.user.email_verified', true));
+    }
 }

@@ -16,6 +16,7 @@ class ViewEvent extends Model
         'device_type',
         'browser',
         'operating_system',
+        'country',
     ];
 
     public function autoSchool(): BelongsTo
@@ -90,13 +91,53 @@ class ViewEvent extends Model
     public static function detectOS($userAgent)
     {
         $ua = strtolower($userAgent);
-        
+
         if (strpos($ua, 'windows') !== false) return 'Windows';
         if (strpos($ua, 'mac') !== false) return 'macOS';
         if (strpos($ua, 'linux') !== false) return 'Linux';
         if (strpos($ua, 'android') !== false) return 'Android';
         if (strpos($ua, 'iphone') !== false || strpos($ua, 'ipad') !== false) return 'iOS';
-        
+
         return 'Other';
+    }
+
+    /**
+     * Guess visitor country from the Accept-Language header's region subtag
+     * (e.g. "fr-MA" -> Maroc). No geo-IP lookup is performed.
+     */
+    public static function detectCountry(?string $acceptLanguage): string
+    {
+        if (! $acceptLanguage) {
+            return 'Inconnu';
+        }
+
+        $map = [
+            'MA' => 'Maroc',
+            'FR' => 'France',
+            'DZ' => 'Algérie',
+            'TN' => 'Tunisie',
+            'ES' => 'Espagne',
+            'BE' => 'Belgique',
+            'CH' => 'Suisse',
+            'CA' => 'Canada',
+            'GB' => 'Royaume-Uni',
+            'US' => 'États-Unis',
+            'DE' => 'Allemagne',
+            'IT' => 'Italie',
+            'NL' => 'Pays-Bas',
+            'SA' => 'Arabie Saoudite',
+            'AE' => 'Émirats Arabes Unis',
+            'QA' => 'Qatar',
+            'EG' => 'Égypte',
+        ];
+
+        $primary = strtok($acceptLanguage, ',');
+        $region  = null;
+
+        if ($primary && preg_match('/[-_]([A-Za-z]{2})\b/', $primary, $matches)) {
+            $region = strtoupper($matches[1]);
+        }
+
+        return $region && isset($map[$region]) ? $map[$region] : 'Inconnu';
     }
 }

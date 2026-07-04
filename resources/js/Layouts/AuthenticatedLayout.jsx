@@ -3,6 +3,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import VerificationBanner from '@/Components/VerificationBanner';
 import { Link } from '@inertiajs/react';
 
 export default function Authenticated({ user, header, children }) {
@@ -112,6 +113,8 @@ export default function Authenticated({ user, header, children }) {
                     </div>
                 </div>
             </nav>
+
+            <VerificationBanner />
 
             {header && (
                 <header className="bg-white shadow">

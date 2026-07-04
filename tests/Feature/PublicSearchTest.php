@@ -92,7 +92,9 @@ class PublicSearchTest extends TestCase
     public function test_robots_txt_returns_correct_content(): void
     {
         $resp = $this->get('/robots.txt')->assertOk();
-        $this->assertStringContainsString('Disallow: /admin/', $resp->content());
+        // In testing env (non-prod), bots are blocked entirely
+        $this->assertStringContainsString('User-agent: *', $resp->content());
+        $this->assertStringContainsString('Disallow:', $resp->content());
         $this->assertStringContainsString('Sitemap:', $resp->content());
     }
 

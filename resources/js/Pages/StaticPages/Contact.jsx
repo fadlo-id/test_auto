@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 
-export default function Contact() {
+export default function Contact({ content = '', site_email = 'contact@autoecoles.ma', site_phone = '+212 5XX XXX XXX' }) {
     const { flash } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         name:    '',
@@ -32,9 +32,15 @@ export default function Contact() {
                 <div className="max-w-5xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-8">
                     {/* Contact info */}
                     <div className="space-y-6">
+                        {content && (
+                            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                                <div className="prose prose-gray max-w-none text-sm text-gray-600 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: content }} />
+                            </div>
+                        )}
                         {[
-                            { icon: '📧', label: 'Email', value: 'contact@autoecoles.ma' },
-                            { icon: '📞', label: 'Téléphone', value: '+212 5XX XXX XXX' },
+                            { icon: '📧', label: 'Email', value: site_email || 'contact@autoecoles.ma' },
+                            { icon: '📞', label: 'Téléphone', value: site_phone || '+212 5XX XXX XXX' },
                             { icon: '📍', label: 'Adresse', value: 'Casablanca, Maroc' },
                             { icon: '🕐', label: 'Horaires', value: 'Lun–Ven 9h–18h' },
                         ].map(c => (
@@ -52,8 +58,9 @@ export default function Contact() {
                     <div className="md:col-span-2">
                         <div className="bg-white rounded-2xl border border-gray-200 p-8">
                             {flash?.success && (
-                                <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200 text-sm">
-                                    ✅ {flash.success}
+                                <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200 text-sm flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {flash.success}
                                 </div>
                             )}
 

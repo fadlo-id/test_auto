@@ -11,6 +11,7 @@ class ContactRequest extends Model
         'email',
         'subject',
         'message',
+        'reply',
         'status',
         'replied_at',
     ];

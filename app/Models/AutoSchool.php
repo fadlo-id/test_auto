@@ -18,7 +18,7 @@ class AutoSchool extends Model
         'website_url', 'facebook_url', 'instagram_url',
         'logo_url', 'banner_url', 'verified_at', 'featured_until',
         'is_active', 'status', 'rejection_reason',
-        'views_remaining', 'clicks_remaining',
+        'stripe_customer_id',
         'credits_exhausted', 'credits_reset_at',
     ];
 
@@ -30,8 +30,6 @@ class AutoSchool extends Model
         'credits_exhausted' => 'boolean',
         'latitude'          => 'float',
         'longitude'         => 'float',
-        'views_remaining'   => 'integer',
-        'clicks_remaining'  => 'integer',
     ];
 
     public function sluggable(): array
@@ -111,8 +109,15 @@ class AutoSchool extends Model
             && ! $this->credits_exhausted;
     }
 
-    public function hasUnlimitedViews(): bool  { return $this->views_remaining  === null; }
-    public function hasUnlimitedClicks(): bool { return $this->clicks_remaining === null; }
+    public function creditBalances()
+    {
+        return $this->hasMany(CreditBalance::class);
+    }
+
+    public function creditTransactions()
+    {
+        return $this->hasMany(CreditTransaction::class);
+    }
 
     public function stats()
     {

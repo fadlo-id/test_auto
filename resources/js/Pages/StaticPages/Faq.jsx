@@ -38,7 +38,7 @@ function FaqItem({ q, a }) {
     );
 }
 
-export default function Faq() {
+export default function Faq({ content = '' }) {
     return (
         <>
             <Head>
@@ -54,6 +54,12 @@ export default function Faq() {
                 </div>
 
                 <div className="max-w-3xl mx-auto px-4 py-16 space-y-12">
+                    {content && (
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                            <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: content }} />
+                        </div>
+                    )}
                     {FAQS.map(section => (
                         <div key={section.cat}>
                             <h2 className="text-lg font-bold text-gray-900 mb-4">{section.cat}</h2>

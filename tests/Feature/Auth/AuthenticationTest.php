@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -27,7 +28,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('user.dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
@@ -50,5 +51,38 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    /**
+     * Regression test: a stale `url.intended` session value (stashed by Laravel's default
+     * unauthenticated-redirect handler on an earlier, unrelated protected-page visit) must
+     * never override the role-based post-login destination.
+     */
+    #[DataProvider('roleDashboardProvider')]
+    public function test_login_always_redirects_to_own_dashboard_even_with_a_stale_intended_url(string $role, string $dashboardRoute): void
+    {
+        $user = User::factory()->create(['role' => $role, 'password' => bcrypt('Secret123!')]);
+
+        // Simulate a prior unauthenticated visit to a *different* portal's protected page —
+        // this stashes session('url.intended') via Laravel's default AuthenticationException handling.
+        $this->get('/user/dashboard');
+
+        $response = $this->post('/login', [
+            'email'    => $user->email,
+            'password' => 'Secret123!',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route($dashboardRoute, absolute: false));
+    }
+
+    public static function roleDashboardProvider(): array
+    {
+        return [
+            'super_admin'  => ['super_admin', 'admin.dashboard'],
+            'admin'        => ['admin', 'admin.dashboard'],
+            'school_owner' => ['school_owner', 'school.dashboard'],
+            'user'         => ['user', 'user.dashboard'],
+        ];
     }
 }

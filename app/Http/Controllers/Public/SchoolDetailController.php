@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
+use App\Services\CreditConsumptionService;
+use App\Services\SeoService;
 use App\Services\TrackingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,10 +13,14 @@ use Inertia\Response;
 
 class SchoolDetailController extends Controller
 {
-    public function __construct(private TrackingService $tracking) {}
+    public function __construct(
+        private TrackingService $tracking,
+        private CreditConsumptionService $credits,
+    ) {}
 
     public function show(Request $request, string $slug): Response|\Illuminate\Http\Response
     {
+        // Allow access even when credits exhausted (show message), but school must be approved+active
         $school = AutoSchool::active()
             ->where('slug', $slug)
             ->with([
@@ -27,23 +33,32 @@ class SchoolDetailController extends Controller
             ->withCount(['reviews' => fn ($q) => $q->where('status', 'approved')])
             ->firstOrFail();
 
-        $this->tracking->trackView($school, $request, $request->user()?->id);
+        // Track view (raw event + dedup + credit)
+        // Only track when school is publicly visible (has credits)
+        if (! $school->credits_exhausted) {
+            $this->tracking->trackView($school, $request, $request->user()?->id);
+            $this->credits->trackView($school, $request);
+        }
 
-        $ratingBreakdown = $school->reviews()
-            ->where('status', 'approved')
-            ->selectRaw('rating, count(*) as count')
-            ->groupBy('rating')
-            ->pluck('count', 'rating')
-            ->toArray();
+        // Compute rating breakdown from already-loaded reviews (no extra query)
+        $ratingBreakdown = $school->reviews
+            ->countBy('rating')
+            ->all();
 
-        $isFavorited = auth()->check()
+        $userId      = auth()->id();
+        $isFavorited = $userId
             && auth()->user()->favorites()->where('auto_school_id', $school->id)->exists();
 
+        $canReview = (bool) $userId
+            && ! $school->reviews->where('user_id', $userId)->count();
+
         return Inertia::render('DetailPage', [
-            'school'          => $school,
-            'ratingBreakdown' => $ratingBreakdown,
-            'canReview'       => auth()->check() && ! $school->reviews()->where('user_id', auth()->id())->exists(),
-            'isFavorited'     => $isFavorited,
+            'school'           => $school,
+            'ratingBreakdown'  => $ratingBreakdown,
+            'canReview'        => $canReview,
+            'isFavorited'      => $isFavorited,
+            'creditsExhausted' => $school->credits_exhausted,
+            'seo'              => app(SeoService::class)->schoolDetail($school),
         ]);
     }
 }

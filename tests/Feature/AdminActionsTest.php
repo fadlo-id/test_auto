@@ -15,7 +15,7 @@ class AdminActionsTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->create(['role' => 'super_admin']);
     }
 
     private function pendingSchool(): AutoSchool
@@ -82,6 +82,39 @@ class AdminActionsTest extends TestCase
 
         $this->actingAs($this->admin())
             ->post(route('admin.users.ban', $user->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'is_active' => false]);
+    }
+
+    public function test_admin_cannot_deactivate_another_admin(): void
+    {
+        $targetAdmin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.users.deactivate', $targetAdmin->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $targetAdmin->id, 'is_active' => true]);
+    }
+
+    public function test_admin_cannot_unban_another_admin_to_bypass_status(): void
+    {
+        $targetAdmin = User::factory()->create(['role' => 'admin', 'is_active' => false, 'status' => 1]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.users.unban', $targetAdmin->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('users', ['id' => $targetAdmin->id, 'is_active' => false, 'status' => 1]);
+    }
+
+    public function test_admin_can_deactivate_regular_user(): void
+    {
+        $user = User::factory()->create(['role' => 'user', 'is_active' => true]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.users.deactivate', $user->id))
             ->assertRedirect();
 
         $this->assertDatabaseHas('users', ['id' => $user->id, 'is_active' => false]);

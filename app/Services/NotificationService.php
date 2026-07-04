@@ -2,13 +2,19 @@
 
 namespace App\Services;
 
+use App\Mail\BookingCancelledMail;
+use App\Mail\BookingConfirmationMail;
 use App\Mail\SchoolApproved;
 use App\Mail\SchoolRejected;
-use App\Mail\SubscriptionExpired;
-use App\Mail\SubscriptionExpiringSoon;
 use App\Models\AutoSchool;
+use App\Models\Booking;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Notifications\NewBookingNotification;
+use App\Notifications\NewReviewNotification;
+use App\Notifications\ReviewApprovedNotification;
+use App\Notifications\SubscriptionExpiredNotification;
+use App\Notifications\SubscriptionExpiringNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -42,59 +48,96 @@ class NotificationService
         }
     }
 
-    public function notifyReviewApproved(User $user, AutoSchool $school): void
+    public function notifyNewBooking(Booking $booking): void
     {
-        // Notification légère via log (email Phase future si besoin)
-        Log::info("Review approved for user #{$user->id} on school #{$school->id}");
-    }
-
-    public function notifySubscriptionExpiringSoon(Subscription $subscription): void
-    {
-        $owner = $subscription->autoSchool?->user;
-        if (! $owner?->email) {
+        $owner = $booking->autoSchool?->user;
+        if (! $owner) {
             return;
         }
 
         try {
-            Mail::to($owner->email)->queue(new SubscriptionExpiringSoon($subscription));
+            $owner->notify(new NewBookingNotification($booking));
         } catch (\Exception $e) {
-            Log::warning("Failed to send expiring soon email subscription #{$subscription->id}: {$e->getMessage()}");
+            Log::warning("Failed to send booking notification #{$booking->id}: {$e->getMessage()}");
         }
     }
 
-    public function notifySubscriptionExpired(Subscription $subscription): void
+    /** Confirmation sent to the candidate who submitted the booking. */
+    public function notifyBookingConfirmation(Booking $booking): void
     {
-        $owner = $subscription->autoSchool?->user;
-        if (! $owner?->email) {
+        if (! $booking->email) {
             return;
         }
 
         try {
-            Mail::to($owner->email)->queue(new SubscriptionExpired($subscription));
+            Mail::to($booking->email)->queue(new BookingConfirmationMail($booking));
         } catch (\Exception $e) {
-            Log::warning("Failed to send expired email subscription #{$subscription->id}: {$e->getMessage()}");
+            Log::warning("Failed to send booking confirmation #{$booking->id}: {$e->getMessage()}");
+        }
+    }
+
+    /** Sent to the candidate when the school cancels their booking request. */
+    public function notifyBookingCancelled(Booking $booking): void
+    {
+        if (! $booking->email) {
+            return;
+        }
+
+        try {
+            Mail::to($booking->email)->queue(new BookingCancelledMail($booking));
+        } catch (\Exception $e) {
+            Log::warning("Failed to send booking cancellation #{$booking->id}: {$e->getMessage()}");
         }
     }
 
     public function notifyNewReview(AutoSchool $school): void
     {
         $owner = $school->user;
-        Log::info("New review pending for school #{$school->id} ({$school->name})");
-
-        if (! $owner?->email) {
+        if (! $owner) {
             return;
         }
 
         try {
-            $dashboardUrl = route('school.reviews');
-            Mail::raw(
-                "Bonjour {$owner->name},\n\nUn nouvel avis a été soumis pour votre auto-école \"{$school->name}\" et est en attente de validation par notre équipe.\n\nConsultez votre tableau de bord :\n{$dashboardUrl}\n\nCordialement,\nL'équipe AutoEcoles.ma",
-                fn ($msg) => $msg
-                    ->to($owner->email, $owner->name)
-                    ->subject("Nouvel avis soumis — {$school->name}")
-            );
+            $owner->notify(new NewReviewNotification($school));
         } catch (\Exception $e) {
             Log::warning("Failed to send new review notification school #{$school->id}: {$e->getMessage()}");
+        }
+    }
+
+    public function notifyReviewApproved(User $reviewer, AutoSchool $school): void
+    {
+        try {
+            $reviewer->notify(new ReviewApprovedNotification($school));
+        } catch (\Exception $e) {
+            Log::warning("Failed to send review approved notification user #{$reviewer->id}: {$e->getMessage()}");
+        }
+    }
+
+    public function notifySubscriptionExpiringSoon(Subscription $subscription): void
+    {
+        $owner = $subscription->autoSchool?->user;
+        if (! $owner) {
+            return;
+        }
+
+        try {
+            $owner->notify(new SubscriptionExpiringNotification($subscription));
+        } catch (\Exception $e) {
+            Log::warning("Failed to send expiring soon notification subscription #{$subscription->id}: {$e->getMessage()}");
+        }
+    }
+
+    public function notifySubscriptionExpired(Subscription $subscription): void
+    {
+        $owner = $subscription->autoSchool?->user;
+        if (! $owner) {
+            return;
+        }
+
+        try {
+            $owner->notify(new SubscriptionExpiredNotification($subscription));
+        } catch (\Exception $e) {
+            Log::warning("Failed to send expired notification subscription #{$subscription->id}: {$e->getMessage()}");
         }
     }
 }

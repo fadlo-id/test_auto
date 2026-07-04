@@ -87,10 +87,12 @@ export default function Reviews({ reviews, filters }) {
                         </div>
                     ))
                 ) : (
-                    <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
-                        <p className="text-3xl mb-3">⭐</p>
-                        <p className="text-gray-500 font-medium">Aucun avis dans cette catégorie</p>
-                        <Link href={route('search')} className="mt-4 inline-block text-sm text-orange-600 hover:underline">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-16 text-center">
+                        <div className="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-7 h-7 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        </div>
+                        <p className="text-gray-600 font-semibold">Aucun avis dans cette catégorie</p>
+                        <Link href={route('search')} className="mt-4 inline-block text-sm text-orange-600 hover:underline font-medium">
                             Trouver une auto-école pour laisser un avis →
                         </Link>
                     </div>

@@ -13,7 +13,7 @@ function Field({ label, children }) {
 function Input({ type = 'text', ...props }) {
     return (
         <input type={type} {...props}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
     );
 }
 
@@ -99,7 +99,7 @@ export default function Settings({ school, categories }) {
                         <div className="sm:col-span-2">
                             <Field label="Description">
                                 <textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={3}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                             </Field>
                         </div>
                     </div>

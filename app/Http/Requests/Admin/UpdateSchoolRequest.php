@@ -8,7 +8,7 @@ class UpdateSchoolRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth()->user()->role === 'admin';
+        return auth()->user()?->isAdmin() ?? false;
     }
 
     public function rules()

@@ -5,17 +5,9 @@ import AdminLayout from '@/Layouts/AdminLayout';
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
 function StatusBadge({ status }) {
-    const map = {
-        approved: 'bg-green-100 text-green-700',
-        rejected: 'bg-red-100 text-red-700',
-        pending:  'bg-yellow-100 text-yellow-700',
-    };
+    const cls = { approved: 'badge badge-green', rejected: 'badge badge-red', pending: 'badge badge-yellow' };
     const labels = { approved: 'Approuvé', rejected: 'Refusé', pending: 'En attente' };
-    return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
-            {labels[status] ?? status}
-        </span>
-    );
+    return <span className={cls[status] ?? 'badge badge-gray'}>{labels[status] ?? status}</span>;
 }
 
 export default function Reviews({ reviews, filters }) {

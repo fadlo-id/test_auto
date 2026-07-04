@@ -34,9 +34,17 @@ function PlanForm({ initial, onSubmit, processing, errors }) {
         stripe_price_id: initial?.stripe_price_id ?? '',
         max_listings:    initial?.max_listings    ?? 1,
         is_active:       initial?.is_active       ?? true,
-        analytics:       initial?.features?.analytics  ?? false,
-        featured:        initial?.features?.featured   ?? false,
-        support:         initial?.features?.support    ?? false,
+        analytics:            initial?.features?.analytics  ?? false,
+        featured:             initial?.features?.featured   ?? false,
+        support:              initial?.features?.support    ?? false,
+        view_credits:      initial?.view_credits      ?? '',
+        whatsapp_credits:  initial?.whatsapp_credits  ?? '',
+        phone_credits:     initial?.phone_credits     ?? '',
+        website_credits:   initial?.website_credits   ?? '',
+        facebook_credits:  initial?.facebook_credits  ?? '',
+        instagram_credits: initial?.instagram_credits ?? '',
+        maps_credits:      initial?.maps_credits      ?? '',
+        email_credits:     initial?.email_credits     ?? '',
     });
     const set = k => e => setData(d => ({ ...d, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
     const isEdit = !!initial;
@@ -47,14 +55,14 @@ function PlanForm({ initial, onSubmit, processing, errors }) {
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Nom *</label>
                     <input value={data.name} onChange={set('name')} required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                     {errors?.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
                 {!isEdit && (
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Slug *</label>
                         <input value={data.slug} onChange={set('slug')} required
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                         {errors?.slug && <p className="text-xs text-red-500 mt-1">{errors.slug}</p>}
                     </div>
                 )}
@@ -62,18 +70,18 @@ function PlanForm({ initial, onSubmit, processing, errors }) {
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
                 <textarea value={data.description} onChange={set('description')} rows={2}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Prix (MAD) *</label>
                     <input type="number" min="0" step="0.01" value={data.price} onChange={set('price')} required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Période *</label>
                     <select value={data.billing_period} onChange={set('billing_period')}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
                         <option value="monthly">Mensuel</option>
                         <option value="yearly">Annuel</option>
                     </select>
@@ -82,7 +90,30 @@ function PlanForm({ initial, onSubmit, processing, errors }) {
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Stripe Price ID</label>
                 <input value={data.stripe_price_id} onChange={set('stripe_price_id')} placeholder="price_xxx"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+            </div>
+            {/* Credit quotas */}
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <p className="text-xs font-semibold text-blue-700 mb-2">Crédits mensuels par type (vide = illimité)</p>
+                <div className="grid grid-cols-2 gap-2">
+                    {[
+                        ['view_credits',      'Vues'],
+                        ['whatsapp_credits',  'WhatsApp'],
+                        ['phone_credits',     'Téléphone'],
+                        ['website_credits',   'Site web'],
+                        ['facebook_credits',  'Facebook'],
+                        ['instagram_credits', 'Instagram'],
+                        ['maps_credits',      'Google Maps'],
+                        ['email_credits',     'Email'],
+                    ].map(([field, label]) => (
+                        <div key={field}>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                            <input type="number" min="0" step="1" value={data[field]} onChange={set(field)}
+                                placeholder="∞ si vide"
+                                className="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                        </div>
+                    ))}
+                </div>
             </div>
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-2">Fonctionnalités incluses</label>

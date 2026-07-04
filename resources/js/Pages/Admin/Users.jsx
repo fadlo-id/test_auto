@@ -1,45 +1,66 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Pagination from '@/Components/UI/Pagination';
+import EmptyState from '@/Components/UI/EmptyState';
+import { MagnifyingGlassIcon, ArrowDownTrayIcon, UsersIcon } from '@heroicons/react/24/outline';
 
-function Badge({ active }) {
-    return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-            active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-        }`}>
-            {active ? 'Actif' : 'Suspendu'}
-        </span>
+// status: 0 = normal, 1 = banni (tinyint in DB)
+// is_active: boolean
+function StatusBadge({ user }) {
+    if (user.status === 1) return (
+        <span className="badge badge-red">Banni</span>
     );
+    if (!user.is_active) return (
+        <span className="badge badge-yellow">Désactivé</span>
+    );
+    return <span className="badge badge-green">Actif</span>;
 }
 
 function RoleBadge({ role }) {
-    const map = {
-        admin: 'bg-purple-100 text-purple-700',
-        school_owner: 'bg-blue-100 text-blue-700',
-        user: 'bg-gray-100 text-gray-600',
+    const cfg = {
+        admin:        'badge-purple',
+        school_owner: 'badge-blue',
+        user:         'badge-gray',
+    };
+    const labels = {
+        admin:        'Admin',
+        school_owner: 'Propriétaire',
+        user:         'Candidat',
     };
     return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[role] ?? 'bg-gray-100 text-gray-600'}`}>
-            {role}
-        </span>
+        <span className={`badge ${cfg[role] ?? 'badge-gray'}`}>{labels[role] ?? role}</span>
     );
 }
 
 export default function Users({ users, filters }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [role,   setRole]   = useState(filters.role   ?? '');
+    const [status, setStatus] = useState(filters.status ?? '');
+
+    const applyFilters = (overrides = {}) => {
+        router.get(
+            route('admin.users.index'),
+            { search, role, status, ...overrides },
+            { preserveState: true, replace: true },
+        );
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get(route('admin.users.index'), { search }, { preserveState: true, replace: true });
+        applyFilters();
     };
 
-    const toggleBan = (user) => {
-        router.post(route('admin.users.ban', user.id), {}, { preserveScroll: true });
+    const activate   = (user) => router.post(route('admin.users.activate',   user.id), {}, { preserveScroll: true });
+    const deactivate = (user) => router.post(route('admin.users.deactivate', user.id), {}, { preserveScroll: true });
+    const ban        = (user) => {
+        if (confirm(`Bannir définitivement ${user.name} ?`)) {
+            router.post(route('admin.users.ban', user.id), {}, { preserveScroll: true });
+        }
     };
-
-    const deleteUser = (user) => {
-        if (confirm(`Supprimer ${user.name} ?`)) {
+    const unban   = (user) => router.post(route('admin.users.unban',   user.id), {}, { preserveScroll: true });
+    const destroy = (user) => {
+        if (confirm(`Supprimer définitivement le compte de ${user.name} ?`)) {
             router.delete(route('admin.users.destroy', user.id), { preserveScroll: true });
         }
     };
@@ -48,111 +69,131 @@ export default function Users({ users, filters }) {
         <AdminLayout title="Utilisateurs">
             <Head title="Admin — Utilisateurs" />
 
-            {flash?.success && (
-                <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
-                    {flash.success}
+            {/* Filters */}
+            <form onSubmit={handleSearch} className="card p-4 mb-5 flex flex-wrap gap-3 items-center">
+                <div className="relative flex-1 min-w-48">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Rechercher par nom ou email…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="input pl-9"
+                    />
                 </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
-                    {flash.error}
-                </div>
-            )}
+                <select
+                    value={role}
+                    onChange={(e) => { setRole(e.target.value); applyFilters({ role: e.target.value }); }}
+                    className="input w-auto"
+                >
+                    <option value="">Tous les rôles</option>
+                    <option value="admin">Administrateur</option>
+                    <option value="school_owner">Propriétaire</option>
+                    <option value="user">Utilisateur</option>
+                </select>
+                <select
+                    value={status}
+                    onChange={(e) => { setStatus(e.target.value); applyFilters({ status: e.target.value }); }}
+                    className="input w-auto"
+                >
+                    <option value="">Tous les statuts</option>
+                    <option value="active">Actif</option>
+                    <option value="inactive">Désactivé</option>
+                    <option value="banned">Banni</option>
+                </select>
+                <button type="submit" className="btn-primary">
+                    Rechercher
+                </button>
+                <a
+                    href={`${route('admin.users.export')}?search=${encodeURIComponent(search)}&role=${role}&status=${status}`}
+                    className="btn-secondary"
+                >
+                    <ArrowDownTrayIcon className="w-4 h-4" />
+                    CSV
+                </a>
+            </form>
 
-            <div className="bg-white rounded-xl border border-gray-200">
-                <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-                    <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="Rechercher par nom ou email..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700"
-                        >
-                            Rechercher
-                        </button>
-                    </form>
-                </div>
-
+            <div className="card overflow-hidden">
+                {users.data.length === 0 ? (
+                    <EmptyState
+                        icon={UsersIcon}
+                        title="Aucun utilisateur trouvé"
+                        description="Essayez d'ajuster vos filtres de recherche."
+                    />
+                ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                {['Nom', 'Email', 'Téléphone', 'Rôle', 'Statut', 'Inscrit le', 'Actions'].map((h) => (
-                                    <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                {['Utilisateur', 'Contact', 'Rôle', 'État', 'Inscrit le', 'Actions'].map((h) => (
+                                    <th key={h} className="table-cell text-left table-header">{h}</th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody>
                             {users.data.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
-                                    <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                                    <td className="px-4 py-3 text-gray-600">{user.phone ?? '—'}</td>
+                                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/70 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs flex-shrink-0">
+                                                {user.name?.[0]?.toUpperCase()}
+                                            </div>
+                                            <span className="font-semibold text-gray-900">{user.name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <p className="text-gray-700 text-sm">{user.email}</p>
+                                        {user.phone && <p className="text-gray-400 text-xs mt-0.5">{user.phone}</p>}
+                                    </td>
                                     <td className="px-4 py-3"><RoleBadge role={user.role} /></td>
-                                    <td className="px-4 py-3"><Badge active={user.is_active} /></td>
-                                    <td className="px-4 py-3 text-gray-500">
+                                    <td className="px-4 py-3"><StatusBadge user={user} /></td>
+                                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            {!user.role === 'admin' && (
-                                                <button
-                                                    onClick={() => toggleBan(user)}
-                                                    className={`text-xs px-2 py-1 rounded font-medium ${
-                                                        user.is_active
-                                                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                                            : 'bg-green-50 text-green-600 hover:bg-green-100'
-                                                    }`}
-                                                >
-                                                    {user.is_active ? 'Suspendre' : 'Réactiver'}
-                                                </button>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {user.role !== 'admin' && (
+                                                <>
+                                                    {!user.is_active && user.status !== 1 && (
+                                                        <button onClick={() => activate(user)}
+                                                            className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
+                                                            Activer
+                                                        </button>
+                                                    )}
+                                                    {user.is_active && user.status !== 1 && (
+                                                        <button onClick={() => deactivate(user)}
+                                                            className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
+                                                            Désactiver
+                                                        </button>
+                                                    )}
+                                                    {user.status !== 1 && (
+                                                        <button onClick={() => ban(user)}
+                                                            className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-colors">
+                                                            Bannir
+                                                        </button>
+                                                    )}
+                                                    {user.status === 1 && (
+                                                        <button onClick={() => unban(user)}
+                                                            className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                                                            Débannir
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
-                                            <button
-                                                onClick={() => deleteUser(user)}
-                                                className="text-xs px-2 py-1 rounded font-medium bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-600"
-                                            >
+                                            <button onClick={() => destroy(user)}
+                                                className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
                                                 Supprimer
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
-                            {users.data.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-4 py-10 text-center text-gray-400">
-                                        Aucun utilisateur trouvé
-                                    </td>
-                                </tr>
-                            )}
                         </tbody>
                     </table>
                 </div>
-
-                {/* Pagination */}
-                {users.links && (
-                    <div className="p-4 border-t border-gray-100 flex gap-1 justify-center">
-                        {users.links.map((link, i) => (
-                            <Link
-                                key={i}
-                                href={link.url ?? '#'}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                className={`px-3 py-1.5 rounded text-sm ${
-                                    link.active
-                                        ? 'bg-orange-600 text-white'
-                                        : link.url
-                                        ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                        : 'bg-white border border-gray-100 text-gray-300 cursor-default'
-                                }`}
-                                preserveScroll
-                            />
-                        ))}
-                    </div>
                 )}
+
+                <Pagination paginator={users} />
             </div>
         </AdminLayout>
     );

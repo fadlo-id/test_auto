@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import GuestLayout from '@/Layouts/GuestLayout';
+import GoogleSignInButton from '@/Components/GoogleSignInButton';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Register() {
+const ROLE_LABELS = {
+    user: 'candidat',
+    school_owner: 'auto-école',
+};
+
+export default function Register({ role }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         phone: '',
-        role: 'user',
+        role,
         password: '',
         password_confirmation: '',
     });
@@ -32,44 +38,27 @@ export default function Register() {
             <Head title="Créer un compte" />
 
             <div className="mb-6 text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                    Créer un compte {ROLE_LABELS[role] ?? ''}
+                </h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Rejoignez la plateforme des auto-écoles marocaines
+                    Rejoignez la plateforme des auto-écoles marocaines —{' '}
+                    <Link href={route('register')} className="text-orange-600 hover:text-orange-700 underline">
+                        changer de type de compte
+                    </Link>
                 </p>
             </div>
 
-            <form onSubmit={submit} className="space-y-4">
-                {/* Account type */}
-                <div>
-                    <InputLabel value="Type de compte" />
-                    <div className="mt-2 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setData('role', 'user')}
-                            className={`flex flex-col items-center p-3 rounded-lg border-2 transition-colors ${
-                                data.role === 'user'
-                                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                            }`}
-                        >
-                            <span className="text-xl">👤</span>
-                            <span className="text-sm font-medium mt-1">Candidat</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setData('role', 'school_owner')}
-                            className={`flex flex-col items-center p-3 rounded-lg border-2 transition-colors ${
-                                data.role === 'school_owner'
-                                    ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                            }`}
-                        >
-                            <span className="text-xl">🏫</span>
-                            <span className="text-sm font-medium mt-1">Auto-école</span>
-                        </button>
-                    </div>
+            <div className="mb-4">
+                <GoogleSignInButton role={role} />
+                <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400">ou par email</span>
+                    <div className="flex-1 h-px bg-gray-200" />
                 </div>
+            </div>
 
+            <form onSubmit={submit} className="space-y-4">
                 <div>
                     <InputLabel htmlFor="name" value="Nom complet" />
                     <TextInput

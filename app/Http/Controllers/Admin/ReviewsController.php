@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Review;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,6 +12,8 @@ use Inertia\Response;
 
 class ReviewsController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
+
     public function index(Request $request): Response
     {
         $reviews = Review::with(['user:id,name,email', 'autoSchool:id,name,city'])
@@ -28,7 +31,12 @@ class ReviewsController extends Controller
 
     public function approve(Review $review): RedirectResponse
     {
+        $review->load(['user', 'autoSchool']);
         $review->update(['status' => 'approved', 'verified' => true]);
+
+        if ($review->user) {
+            $this->notifications->notifyReviewApproved($review->user, $review->autoSchool);
+        }
 
         return back()->with('success', 'Avis approuvé.');
     }

@@ -16,7 +16,7 @@ class AdminMiddleware
 
         $user = auth()->user();
 
-        if ($user->role !== 'admin') {
+        if (! $user->isAdmin()) {
             abort(403, 'Accès non autorisé. Réservé aux administrateurs.');
         }
 

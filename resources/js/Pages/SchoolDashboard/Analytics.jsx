@@ -4,8 +4,19 @@ import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
+import KpiCard from '@/Components/Analytics/KpiCard';
+import PieCard from '@/Components/Analytics/PieCard';
+import TopListChart from '@/Components/Analytics/TopListChart';
+import Heatmap from '@/Components/Analytics/Heatmap';
+import Funnel from '@/Components/Analytics/Funnel';
+import DateRangeFilter from '@/Components/Analytics/DateRangeFilter';
+import ExportButtons from '@/Components/Analytics/ExportButtons';
 
 const COLORS = ['#ea580c', '#3b82f6', '#10b981', '#f59e0b'];
+
+function ucfirst(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
 
 function StatCard({ label, value, change, unit = '' }) {
     const positive = change >= 0;
@@ -22,10 +33,18 @@ function StatCard({ label, value, change, unit = '' }) {
     );
 }
 
-export default function Analytics({ school, analytics, comparison, days }) {
+export default function Analytics({
+    school, analytics, comparison, days, filters = {},
+    overview = {}, trafficSources = {}, browserStats = [], countryStats = [], heatmap = [], funnel = {},
+}) {
     const hasData = analytics?.summary?.total_views > 0;
 
     const changeFilter = (d) => router.get(route('school.analytics'), { days: d }, { preserveState: true });
+    const applyDateRange = (params) => router.get(route('school.analytics'), params, { preserveState: true, replace: true });
+
+    const trafficData = Object.entries(trafficSources).map(([name, value]) => ({ name: ucfirst(name), value }));
+    const browserData = browserStats.map((b) => ({ name: b.name, value: Number(b.count) }));
+    const countryData = countryStats.map((c) => ({ name: c.name, value: Number(c.count) }));
 
     const viewsData = analytics?.chart_data?.views?.labels?.map((label, i) => ({
         date: label,
@@ -60,16 +79,23 @@ export default function Analytics({ school, analytics, comparison, days }) {
             <Head title="Analytics" />
 
             {/* Period filter */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <h2 className="font-semibold text-gray-900">Vue d'ensemble ({days} jours)</h2>
-                <div className="flex gap-1">
-                    {[7, 30, 90].map((d) => (
-                        <button key={d} onClick={() => changeFilter(d)}
-                            className={`px-3 py-1.5 text-sm rounded-lg font-medium ${days === d ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                            {d}j
-                        </button>
-                    ))}
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex gap-1">
+                        {[7, 30, 90].map((d) => (
+                            <button key={d} onClick={() => changeFilter(d)}
+                                className={`px-3 py-1.5 text-sm rounded-lg font-medium ${days === d ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                                {d}j
+                            </button>
+                        ))}
+                    </div>
+                    <ExportButtons routeName="school.analytics.export" filters={{ date_from: filters.date_from, date_to: filters.date_to }} />
                 </div>
+            </div>
+
+            <div className="mb-6">
+                <DateRangeFilter dateFrom={filters.date_from} dateTo={filters.date_to} onApply={applyDateRange} />
             </div>
 
             {/* Summary stats */}
@@ -78,6 +104,14 @@ export default function Analytics({ school, analytics, comparison, days }) {
                 <StatCard label="Visiteurs uniques" value={summary.unique_visitors} />
                 <StatCard label="Clics totaux" value={summary.total_clicks} change={comparison?.clicks?.change} />
                 <StatCard label="Nouveaux leads" value={summary.new_leads} change={comparison?.leads?.change} />
+            </div>
+
+            {/* Enterprise KPIs */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <KpiCard label="Visiteurs récurrents" value={overview.returning_visitors} />
+                <KpiCard label="Taux de rebond" value={overview.bounce_rate} suffix="%" />
+                <KpiCard label="CTR" value={overview.ctr} suffix="%" />
+                <KpiCard label="Taux de conversion" value={overview.conversion_rate} suffix="%" color="text-green-700" />
             </div>
 
             {!hasData ? (
@@ -155,6 +189,18 @@ export default function Analytics({ school, analytics, comparison, days }) {
                     )}
                 </>
             )}
+
+            {/* Enterprise breakdowns */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-5">
+                <PieCard title="Sources de trafic" data={trafficData} />
+                <PieCard title="Navigateurs" data={browserData} />
+                <TopListChart title="Pays des visiteurs" data={countryData} color="#14b8a6" height={220} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
+                <Heatmap data={heatmap} />
+                <Funnel funnel={funnel} />
+            </div>
         </SchoolLayout>
     );
 }

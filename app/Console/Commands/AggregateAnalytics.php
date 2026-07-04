@@ -47,7 +47,14 @@ class AggregateAnalytics extends Command
             ->get();
 
         $totalViews = $viewEvents->count();
-        $uniqueVisitors = $viewEvents->groupBy('user_id')->count();
+        $uniqueVisitors = $viewEvents->pluck('ip_address')->unique()->count();
+
+        // A visitor is "returning" if their IP has a view event for this school before this date
+        $returningVisitors = ViewEvent::forSchool($school->id)
+            ->where('created_at', '<', $startOfDay)
+            ->whereIn('ip_address', $viewEvents->pluck('ip_address')->unique())
+            ->distinct('ip_address')
+            ->count('ip_address');
 
         // Get click events by type
         $clickEvents = ClickEvent::forSchool($school->id)
@@ -91,6 +98,7 @@ class AggregateAnalytics extends Command
             [
                 'total_views' => $totalViews,
                 'unique_visitors' => $uniqueVisitors,
+                'returning_visitors' => $returningVisitors,
                 'phone_clicks' => $clicksByType->get('phone', 0),
                 'whatsapp_clicks' => $clicksByType->get('whatsapp', 0),
                 'website_clicks' => $clicksByType->get('website', 0),

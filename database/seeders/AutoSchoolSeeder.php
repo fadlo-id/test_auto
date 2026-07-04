@@ -13,18 +13,19 @@ class AutoSchoolSeeder extends Seeder
     public function run(): void
     {
         // Reuse school_owner already created by AdminSeeder
-        $owner = User::where('email', 'ecole@autoecoles.ma')->first()
-            ?? User::updateOrCreate(
-                ['email' => 'ecole@autoecoles.ma'],
-                [
-                    'name'              => 'Auto-École Test',
-                    'phone'             => '+212600000001',
-                    'password'          => Hash::make('password'),
-                    'role'              => User::ROLE_SCHOOL_OWNER,
-                    'is_active'         => true,
-                    'email_verified_at' => now(),
-                ]
-            );
+        $owner = User::where('email', 'ecole@autoecoles.ma')->first();
+
+        if (! $owner) {
+            $owner = User::create([
+                'name'      => 'Auto-École Test',
+                'email'     => 'ecole@autoecoles.ma',
+                'phone'     => '+212600000001',
+                'password'  => Hash::make('password'),
+                'role'      => User::ROLE_SCHOOL_OWNER,
+                'is_active' => true,
+            ]);
+            $owner->markEmailAsVerified();
+        }
 
         // Demo school — approved so it appears in public search
         $school = AutoSchool::updateOrCreate(

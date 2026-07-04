@@ -17,6 +17,7 @@ class LeadEvent extends Model
         'referrer_url',
         'ip_address',
         'device_type',
+        'country',
         'status',
     ];
 

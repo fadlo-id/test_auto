@@ -15,6 +15,7 @@ class ClickEvent extends Model
         'user_agent',
         'device_type',
         'browser',
+        'country',
         'details',
     ];
 

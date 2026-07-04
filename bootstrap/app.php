@@ -17,16 +17,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'        => \App\Http\Middleware\AdminMiddleware::class,
+            'super_admin'  => \App\Http\Middleware\SuperAdminMiddleware::class,
             'school.owner' => \App\Http\Middleware\SchoolOwnerMiddleware::class,
             'subscription' => \App\Http\Middleware\CheckSubscription::class,
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role'         => \App\Http\Middleware\CheckRole::class,
+            'permission'   => \App\Http\Middleware\CheckPermission::class,
+            'maintenance'  => \App\Http\Middleware\MaintenanceMode::class,
         ]);
-        
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\VisitorCookieMiddleware::class,
         ]);
 
     })

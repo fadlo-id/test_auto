@@ -13,7 +13,7 @@ class AdminTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->create(['role' => 'super_admin']);
     }
 
     private function createSchool(string $status = 'pending'): AutoSchool

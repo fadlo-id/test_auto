@@ -1,28 +1,48 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Accès refusé — AutoEcoles.ma</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: ui-sans-serif, system-ui, sans-serif; background: #f9fafb; color: #111827; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .card { background: white; border-radius: 1rem; border: 1px solid #e5e7eb; padding: 3rem 2rem; text-align: center; max-width: 480px; width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
-        .emoji { font-size: 4rem; margin-bottom: 1rem; }
-        h1 { font-size: 5rem; font-weight: 800; color: #f59e0b; line-height: 1; margin-bottom: .5rem; }
-        h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: .75rem; }
-        p { color: #6b7280; margin-bottom: 2rem; }
-        a { display: inline-block; background: #ea580c; color: white; padding: .75rem 1.5rem; border-radius: .75rem; text-decoration: none; font-weight: 500; }
-        a:hover { background: #c2410c; }
-    </style>
+    @vite(['resources/css/app.css'])
+    <script>
+        (function () {
+            var stored = localStorage.getItem('theme');
+            var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', dark);
+        })();
+    </script>
 </head>
-<body>
-    <div class="card">
-        <div class="emoji">🔒</div>
-        <h1>403</h1>
-        <h2>Accès non autorisé</h2>
-        <p>{{ $exception->getMessage() ?: 'Vous n\'avez pas la permission d\'accéder à cette page.' }}</p>
-        <a href="/">Retour à l'accueil</a>
+<body class="h-full font-sans antialiased bg-gray-50 dark:bg-zinc-950">
+    <div class="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
+        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-amber-100/60 dark:bg-amber-500/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-orange-50 dark:bg-orange-500/5 blur-3xl pointer-events-none"></div>
+
+        <div class="relative w-full max-w-md">
+            <div class="card p-8 sm:p-10 text-center">
+                <span class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                </span>
+
+                <p class="text-sm font-bold tracking-widest text-amber-600 dark:text-amber-400 uppercase mb-1">Erreur 403</p>
+                <h1 class="text-2xl font-extrabold text-gray-900 dark:text-zinc-50 tracking-tight mb-2">Accès non autorisé</h1>
+                <p class="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed mb-8">
+                    {{ $exception->getMessage() ?: "Vous n'avez pas la permission d'accéder à cette page." }}
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="/" class="btn-primary flex-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        Retour à l'accueil
+                    </a>
+                    <a href="{{ url('/contact') }}" class="btn-secondary flex-1">Contacter le support</a>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

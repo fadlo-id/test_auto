@@ -60,20 +60,20 @@ export default function Profile() {
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Nom complet *</label>
                             <input value={profileData.name} onChange={e => setProfile('name', e.target.value)} required
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                             {profileErrors.name && <p className="text-xs text-red-500 mt-1">{profileErrors.name}</p>}
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Adresse e-mail *</label>
                             <input type="email" value={profileData.email} onChange={e => setProfile('email', e.target.value)} required
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                             {profileErrors.email && <p className="text-xs text-red-500 mt-1">{profileErrors.email}</p>}
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Téléphone</label>
                             <input type="tel" value={profileData.phone ?? ''} onChange={e => setProfile('phone', e.target.value)}
                                 placeholder="+212 6XX XXX XXX"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                         </div>
                         <button type="submit" disabled={savingProfile}
                             className="px-6 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50">
@@ -89,19 +89,19 @@ export default function Profile() {
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Mot de passe actuel</label>
                             <input type="password" value={pwData.current_password} onChange={e => setPw('current_password', e.target.value)} required
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                             {pwErrors.current_password && <p className="text-xs text-red-500 mt-1">{pwErrors.current_password}</p>}
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
                             <input type="password" value={pwData.password} onChange={e => setPw('password', e.target.value)} required
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                             {pwErrors.password && <p className="text-xs text-red-500 mt-1">{pwErrors.password}</p>}
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Confirmer le nouveau mot de passe</label>
                             <input type="password" value={pwData.password_confirmation} onChange={e => setPw('password_confirmation', e.target.value)} required
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                                className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                         </div>
                         <button type="submit" disabled={savingPw}
                             className="px-6 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50">

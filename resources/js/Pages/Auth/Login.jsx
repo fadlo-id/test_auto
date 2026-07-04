@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import Checkbox from '@/Components/Checkbox';
 import GuestLayout from '@/Layouts/GuestLayout';
+import GoogleSignInButton from '@/Components/GoogleSignInButton';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -49,6 +50,15 @@ export default function Login({ status, canResetPassword }) {
                     {flash.error}
                 </div>
             )}
+
+            <div className="mb-4">
+                <GoogleSignInButton />
+                <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400">ou par email</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                </div>
+            </div>
 
             <form onSubmit={submit} className="space-y-4">
                 <div>

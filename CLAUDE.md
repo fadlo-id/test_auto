@@ -20,11 +20,16 @@
 
 | Role          | Middleware       | Accès                            |
 |---------------|-----------------|----------------------------------|
-| `admin`       | `admin`          | `/admin/*`                       |
+| `super_admin` | `admin`          | `/admin/*` — accès total         |
+| `admin`       | `admin`          | `/admin/*` — selon permissions   |
 | `school_owner`| `school.owner`   | `/school/*`                      |
 | `user`        | `auth`           | `/` public + soumettre des avis  |
 
-Redirect post-login : `/dashboard` → détecte le rôle → route appropriée.
+Redirect post-login : rôle détecté → route directe (`user.dashboard`, `school.dashboard`, `admin.dashboard`).
+
+**RBAC personnalisé** (`HasPermissions` trait) — 18 permissions dans `user_permissions`.
+- `super_admin` : bypass total (pas de lignes en base nécessaires)
+- `admin` : accès selon les lignes de `user_permissions`
 
 ## Modèles clés
 
@@ -43,7 +48,7 @@ Redirect post-login : `/dashboard` → détecte le rôle → route appropriée.
 ## Commandes essentielles
 
 ```bash
-php artisan test           # 56 tests (doit être vert avant tout commit)
+php artisan test           # 124 tests (doit être vert avant tout commit)
 npm run build              # build Vite (doit être clean)
 php artisan route:list     # vérifier les routes
 php artisan migrate        # appliquer migrations
@@ -53,7 +58,8 @@ php artisan db:seed        # seeder (admin + school_owner + user de test)
 ### Seeder (comptes de test)
 
 ```
-admin@autoecoles.ma   / Admin@2026!  — role: admin
+admin@autoecoles.ma   / Admin@2026!  — role: super_admin  (accès total, tous les menus)
+manager@autoecoles.ma / password     — role: admin        (5 permissions limitées)
 ecole@autoecoles.ma   / password     — role: school_owner (demo school pre-approved)
 user@autoecoles.ma    / password     — role: user
 ```
@@ -101,7 +107,7 @@ Activer avec cron (serveur) :
 
 ```env
 APP_NAME="AutoEcoles Maroc"
-APP_URL=https://votredomaine.com
+APP_URL=https://votredomaine.com  # en local avec `php artisan serve` : http://127.0.0.1:8000 — doit matcher l'URL réelle, sinon les liens des emails (vérification, reset...) pointent au mauvais endroit car les notifications sont queued (QUEUE_CONNECTION=database)
 DB_CONNECTION=mysql
 DB_DATABASE=auto_ecole
 MAIL_MAILER=smtp           # log en dev

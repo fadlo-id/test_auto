@@ -35,7 +35,9 @@ return new class extends Migration
 
             $table->index('city');
             $table->index('verified_at');
-            $table->fullText(['name', 'city']);
+            if (\DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['name', 'city']);
+            }
         });
     }
 

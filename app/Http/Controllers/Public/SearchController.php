@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AutoSchool;
 use App\Models\Category;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +14,20 @@ use Inertia\Response;
 
 class SearchController extends Controller
 {
+    public function byCity(string $city): Response
+    {
+        return $this->index(new \Illuminate\Http\Request(['city' => urldecode($city)]));
+    }
+
+    public function byCategory(string $code): Response
+    {
+        $category = \App\Models\Category::where('code', strtoupper($code))->firstOrFail();
+        return $this->index(new \Illuminate\Http\Request(['category' => $category->id]));
+    }
+
     public function index(Request $request): Response
     {
-        $query = AutoSchool::active()
+        $query = AutoSchool::visible()
             ->with('categories:id,name_fr,name_ar,code')
             ->withAvg('reviews as average_rating', 'rating')
             ->withCount(['reviews' => fn ($q) => $q->where('status', 'approved')]);
@@ -71,20 +83,24 @@ class SearchController extends Controller
             match ($sort) {
                 'rating'   => $query->orderByDesc('average_rating'),
                 'reviews'  => $query->orderByDesc('reviews_count'),
+                'newest'   => $query->orderByDesc('created_at'),
                 default    => $query->orderBy('name'),
             };
         }
 
         $schools = $query->paginate(12)->withQueryString();
 
-        $cities     = Cache::remember('search_cities', now()->addHour(), fn () => AutoSchool::active()->select('city')->distinct()->orderBy('city')->pluck('city'));
+        $cities     = Cache::remember('search_cities', now()->addHour(), fn () => AutoSchool::visible()->select('city')->distinct()->orderBy('city')->pluck('city'));
         $categories = Cache::remember('search_categories', now()->addDay(), fn () => Category::all(['id', 'name_fr', 'name_ar', 'code']));
+
+        $filters = $request->only('search', 'city', 'region', 'category', 'min_rating', 'sort', 'lat', 'lng', 'radius');
 
         return Inertia::render('SearchPage', [
             'schools'    => $schools,
             'cities'     => $cities,
             'categories' => $categories,
-            'filters'    => $request->only('search', 'city', 'region', 'category', 'min_rating', 'sort', 'lat', 'lng', 'radius'),
+            'filters'    => $filters,
+            'seo'        => app(SeoService::class)->search($filters, $schools->total()),
         ]);
     }
 }

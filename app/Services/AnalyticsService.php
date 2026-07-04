@@ -28,7 +28,7 @@ class AnalyticsService
             'summary' => $this->getSummary($stats),
             'daily_stats' => $stats,
             'chart_data' => $this->getChartData($stats),
-            'top_clicks' => $this->getTopClicks($school, $startDate, $endDate),
+            'top_clicks' => $this->getTopClicks($stats),
             'devices' => $this->getDeviceBreakdown($stats),
             'traffic_sources' => $this->getTrafficBreakdown($stats),
         ];
@@ -45,8 +45,8 @@ class AnalyticsService
             'total_clicks' => $stats->sum('total_clicks'),
             'new_leads' => $stats->sum('new_leads'),
             'converted_leads' => $stats->sum('converted_leads'),
-            'avg_ctr' => $stats->count() > 0 ? round($stats->avg('total_clicks') / $stats->avg('total_views') * 100, 2) : 0,
-            'avg_conversion_rate' => $stats->count() > 0 ? round($stats->avg('new_leads') / $stats->avg('total_views') * 100, 2) : 0,
+            'avg_ctr' => $stats->sum('total_views') > 0 ? round($stats->sum('total_clicks') / $stats->sum('total_views') * 100, 2) : 0,
+            'avg_conversion_rate' => $stats->sum('total_views') > 0 ? round($stats->sum('new_leads') / $stats->sum('total_views') * 100, 2) : 0,
         ];
     }
 
@@ -74,14 +74,11 @@ class AnalyticsService
     }
 
     /**
-     * Get top clicks by type
+     * Get top clicks by type (reuses the daily-stats collection already
+     * fetched by getDashboardData — no separate query).
      */
-    public function getTopClicks(AutoSchool $school, $startDate, $endDate)
+    public function getTopClicks($stats)
     {
-        $stats = AnalyticsDailyStat::forSchool($school->id)
-            ->dateRange($startDate, $endDate)
-            ->get();
-
         return [
             'phone' => $stats->sum('phone_clicks'),
             'whatsapp' => $stats->sum('whatsapp_clicks'),

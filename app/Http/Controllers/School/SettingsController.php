@@ -9,6 +9,7 @@ use App\Models\AutoSchool;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +19,8 @@ class SettingsController extends Controller
     public function index(): Response
     {
         $school = auth()->user()->autoSchool;
-        $categories = Category::all(['id', 'name_fr', 'name_ar', 'code']);
+        // Same cache key/TTL as SearchController's category list — identical query.
+        $categories = Cache::remember('search_categories', now()->addDay(), fn () => Category::all(['id', 'name_fr', 'name_ar', 'code']));
 
         return Inertia::render('SchoolDashboard/Settings', [
             'school'     => $school?->load('categories'),
@@ -33,7 +35,7 @@ class SettingsController extends Controller
 
         $school = AutoSchool::create(array_merge(
             collect($validated)->except('categories')->toArray(),
-            ['user_id' => auth()->id(), 'status' => 'pending']
+            ['user_id' => auth()->id(), 'status' => 'pending', 'is_active' => false]
         ));
 
         if ($categories) {

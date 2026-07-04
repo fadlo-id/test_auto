@@ -7,7 +7,9 @@ use App\Models\ViewEvent;
 use App\Models\ClickEvent;
 use App\Models\LeadEvent;
 use App\Models\AnalyticsDailyStat;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TrackingService
 {
@@ -21,6 +23,7 @@ class TrackingService
         $ipAddress  = $this->anonymizeIp($request->ip() ?? '127.0.0.1');
         $deviceType = ViewEvent::detectDeviceType($userAgent);
         $referrer   = $request->headers->get('referer');
+        $country    = ViewEvent::detectCountry($request->header('Accept-Language'));
         $today      = today()->toDateString();
 
         // Fast path: session flag set during this browser session today
@@ -30,7 +33,7 @@ class TrackingService
         // Authoritative check: same anonymised IP has already been counted today
         $dbSeen = $sessionSeen ? true : ViewEvent::where('auto_school_id', $school->id)
             ->where('ip_address', $ipAddress)
-            ->whereDate('created_at', $today)
+            ->whereBetween('created_at', [today()->startOfDay(), today()->endOfDay()])
             ->exists();
 
         $isUnique = ! $sessionSeen && ! $dbSeen;
@@ -45,20 +48,18 @@ class TrackingService
             'device_type'      => $deviceType,
             'browser'          => ViewEvent::detectBrowser($userAgent),
             'operating_system' => ViewEvent::detectOS($userAgent),
+            'country'          => $country,
         ]);
 
         // Only increment the unique-view counter once per visitor per day
         if ($isUnique) {
             $request->session()->put($sessionKey, true);
 
-            $this->incrementDailyStat($school->id, 'total_views');
-            $this->incrementDailyStat($school->id, $deviceType . '_views');
-
-            if (! $referrer || $referrer === '') {
-                $this->incrementDailyStat($school->id, 'direct_traffic');
-            } else {
-                $this->incrementDailyStat($school->id, 'referral_traffic');
-            }
+            $this->incrementDailyStats($school->id, [
+                'total_views',
+                $deviceType . '_views',
+                (! $referrer || $referrer === '') ? 'direct_traffic' : 'referral_traffic',
+            ]);
         }
     }
 
@@ -83,10 +84,10 @@ class TrackingService
             'user_agent'     => substr($userAgent, 0, 255),
             'device_type'    => ViewEvent::detectDeviceType($userAgent),
             'browser'        => ViewEvent::detectBrowser($userAgent),
+            'country'        => ViewEvent::detectCountry($request->header('Accept-Language')),
         ]);
 
-        $this->incrementDailyStat($school->id, $clickType . '_clicks');
-        $this->incrementDailyStat($school->id, 'total_clicks');
+        $this->incrementDailyStats($school->id, [$clickType . '_clicks', 'total_clicks']);
     }
 
     /**
@@ -107,18 +108,21 @@ class TrackingService
             'ip_address'      => $this->anonymizeIp($request->ip() ?? '127.0.0.1'),
             'device_type'     => ViewEvent::detectDeviceType($userAgent),
             'referrer_url'    => $referrer ? substr($referrer, 0, 500) : null,
+            'country'         => ViewEvent::detectCountry($request->header('Accept-Language')),
             'status'          => 'new',
         ]);
 
-        $this->incrementDailyStat($school->id, 'new_leads');
+        $this->incrementDailyStats($school->id, ['new_leads']);
 
         return $lead;
     }
 
     /**
-     * Increment a single column in today's daily stat row for a school.
+     * Increment one or more columns in today's daily stat row for a school,
+     * in a single row lookup + a single batched UPDATE (instead of one
+     * SELECT/INSERT + one UPDATE per column).
      */
-    private function incrementDailyStat(int $schoolId, string $column): void
+    private function incrementDailyStats(int $schoolId, array $columns): void
     {
         $allowedColumns = [
             'total_views', 'unique_visitors', 'returning_visitors',
@@ -129,17 +133,30 @@ class TrackingService
             'direct_traffic', 'organic_traffic', 'referral_traffic', 'paid_traffic',
         ];
 
-        if (! in_array($column, $allowedColumns, true)) {
+        $columns = array_values(array_unique(array_filter(
+            $columns,
+            fn ($column) => in_array($column, $allowedColumns, true)
+        )));
+
+        if (empty($columns)) {
             return;
         }
 
-        AnalyticsDailyStat::firstOrCreate(
-            ['auto_school_id' => $schoolId, 'date' => today()->toDateString()],
-        );
+        $date = today()->toDateString();
+
+        try {
+            AnalyticsDailyStat::firstOrCreate(['auto_school_id' => $schoolId, 'date' => $date]);
+        } catch (QueryException $e) {
+            // Lost the race to a concurrent request inserting the same (school, date)
+            // row first — the unique constraint means it now exists either way.
+        }
 
         AnalyticsDailyStat::where('auto_school_id', $schoolId)
-            ->where('date', today()->toDateString())
-            ->increment($column);
+            ->where('date', $date)
+            ->update(array_combine(
+                $columns,
+                array_map(fn ($column) => DB::raw("{$column} + 1"), $columns)
+            ));
     }
 
     private function anonymizeIp(string $ip): string

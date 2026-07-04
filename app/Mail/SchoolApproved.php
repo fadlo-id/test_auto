@@ -13,6 +13,9 @@ class SchoolApproved extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $tries = 3;
+    public $backoff = [60, 300, 900];
+
     public function __construct(public AutoSchool $school) {}
 
     public function envelope(): Envelope

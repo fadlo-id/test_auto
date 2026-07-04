@@ -1,6 +1,16 @@
 import { Head, Link } from '@inertiajs/react';
 
-export default function About() {
+function CmsContent({ html }) {
+    if (!html) return null;
+    return (
+        <div
+            className="prose prose-gray max-w-none text-gray-600 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: html }}
+        />
+    );
+}
+
+export default function About({ content = '' }) {
     return (
         <>
             <Head>
@@ -17,6 +27,13 @@ export default function About() {
                 </div>
 
                 <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
+                    {/* CMS content — if set in admin settings, shown before static sections */}
+                    {content && (
+                        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                            <CmsContent html={content} />
+                        </section>
+                    )}
+
                     {/* Mission */}
                     <section className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
@@ -44,12 +61,12 @@ export default function About() {
                         <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Nos valeurs</h2>
                         <div className="grid md:grid-cols-3 gap-6">
                             {[
-                                { icon: '✅', title: 'Fiabilité', desc: 'Toutes les auto-écoles sont vérifiées avant publication sur la plateforme.' },
-                                { icon: '🌟', title: 'Transparence', desc: 'Les avis sont publiés sans modification, bons ou mauvais — la vérité avant tout.' },
-                                { icon: '🤝', title: 'Accessibilité', desc: 'Notre service de base est gratuit pour tous les candidats au permis.' },
+                                { icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>, color: 'bg-green-50 text-green-600', title: 'Fiabilité', desc: 'Toutes les auto-écoles sont vérifiées avant publication sur la plateforme.' },
+                                { icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, color: 'bg-orange-50 text-orange-600', title: 'Transparence', desc: 'Les avis sont publiés sans modification, bons ou mauvais — la vérité avant tout.' },
+                                { icon: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, color: 'bg-blue-50 text-blue-600', title: 'Accessibilité', desc: 'Notre service de base est gratuit pour tous les candidats au permis.' },
                             ].map(v => (
-                                <div key={v.title} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm text-center">
-                                    <div className="text-3xl mb-3">{v.icon}</div>
+                                <div key={v.title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center hover:border-orange-100 transition-colors">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${v.color}`}>{v.icon}</div>
                                     <h3 className="font-bold text-gray-900 mb-2">{v.title}</h3>
                                     <p className="text-sm text-gray-500 leading-relaxed">{v.desc}</p>
                                 </div>

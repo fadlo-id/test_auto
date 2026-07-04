@@ -54,6 +54,24 @@ class ReviewsTest extends TestCase
         ])->assertRedirect(route('login'));
     }
 
+    public function test_unverified_user_cannot_submit_review(): void
+    {
+        $school = $this->createActiveSchool();
+        $user   = User::factory()->unverified()->create(['role' => 'user']);
+
+        $this->actingAs($user)
+            ->post(route('school.detail.review', $school->slug), [
+                'rating'  => 4,
+                'content' => 'Formation de qualite, je recommande.',
+            ])
+            ->assertRedirect(route('verification.notice'));
+
+        $this->assertDatabaseMissing('reviews', [
+            'auto_school_id' => $school->id,
+            'user_id'        => $user->id,
+        ]);
+    }
+
     public function test_user_cannot_review_same_school_twice(): void
     {
         $school = $this->createActiveSchool();
@@ -90,7 +108,7 @@ class ReviewsTest extends TestCase
 
     public function test_admin_can_approve_review(): void
     {
-        $admin  = User::factory()->create(['role' => 'admin']);
+        $admin  = User::factory()->create(['role' => 'super_admin']);
         $school = $this->createActiveSchool();
         $review = Review::factory()->create([
             'auto_school_id' => $school->id,

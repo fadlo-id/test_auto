@@ -199,8 +199,9 @@ export default function AdminAnalyticsDashboard() {
                                             </td>
                                             <td className="px-4 py-3 text-gray-600">{school.reviews_count}</td>
                                             <td className="px-4 py-3">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                                                    ⭐ {school.rating?.toFixed(1) || 'N/A'}
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700">
+                                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                    {school.rating?.toFixed(1) || 'N/A'}
                                                 </span>
                                             </td>
                                         </tr>

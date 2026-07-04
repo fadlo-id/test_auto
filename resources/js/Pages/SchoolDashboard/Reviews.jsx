@@ -54,7 +54,7 @@ function ReplySection({ review }) {
                         onChange={(e) => setData('owner_reply', e.target.value)}
                         rows={2}
                         placeholder="Votre reponse..."
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     />
                     <div className="flex gap-2">
                         <button type="submit" disabled={processing}

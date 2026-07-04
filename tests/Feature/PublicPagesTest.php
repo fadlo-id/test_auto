@@ -98,11 +98,17 @@ class PublicPagesTest extends TestCase
     {
         $this->createActiveSchool(['slug' => 'ecole-sitemap-test']);
 
+        // Sitemap index
         $response = $this->get(route('sitemap'));
-
         $response->assertStatus(200);
-        $response->assertHeader('Content-Type', 'application/xml');
-        $this->assertStringContainsString('urlset', $response->getContent());
-        $this->assertStringContainsString('ecole-sitemap-test', $response->getContent());
+        $response->assertHeader('Content-Type', 'application/xml; charset=utf-8');
+        $this->assertStringContainsString('sitemapindex', $response->getContent());
+        $this->assertStringContainsString('sitemap-schools.xml', $response->getContent());
+
+        // Schools sub-sitemap contains the school slug
+        $schools = $this->get(route('sitemap.schools'));
+        $schools->assertStatus(200);
+        $this->assertStringContainsString('urlset', $schools->getContent());
+        $this->assertStringContainsString('ecole-sitemap-test', $schools->getContent());
     }
 }

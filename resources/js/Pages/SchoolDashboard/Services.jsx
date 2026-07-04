@@ -18,23 +18,23 @@ function ServiceForm({ initial, onSubmit, onCancel, processing }) {
                 <div>
                     <label className="text-sm font-medium text-gray-700">Nom du service *</label>
                     <input type="text" value={data.name} onChange={update('name')} required
-                        className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="mt-1 w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                 </div>
                 <div>
                     <label className="text-sm font-medium text-gray-700">Prix (MAD) *</label>
                     <input type="number" min="0" step="0.01" value={data.price} onChange={update('price')} required
-                        className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                        className="mt-1 w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                 </div>
             </div>
             <div>
                 <label className="text-sm font-medium text-gray-700">Description</label>
                 <textarea value={data.description} onChange={update('description')} rows={2}
-                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div>
                 <label className="text-sm font-medium text-gray-700">Duree (heures)</label>
                 <input type="number" min="0" step="0.5" value={data.duration} onChange={update('duration')}
-                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    className="mt-1 w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
             </div>
             <div className="flex gap-2">
                 <button type="submit" disabled={processing}

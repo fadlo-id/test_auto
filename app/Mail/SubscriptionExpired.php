@@ -13,6 +13,9 @@ class SubscriptionExpired extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $tries = 3;
+    public $backoff = [60, 300, 900];
+
     public function __construct(public Subscription $subscription) {}
 
     public function envelope(): Envelope

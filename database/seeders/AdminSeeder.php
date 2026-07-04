@@ -10,21 +10,39 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin principal
-        User::updateOrCreate(
+        // Super Admin principal (contrôle absolu)
+        $superAdmin = User::updateOrCreate(
             ['email' => 'admin@autoecoles.ma'],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('Admin@2026!'),
-                'phone' => '+212600000000',
-                'role' => User::ROLE_ADMIN,
+                'name'      => 'Super Admin',
+                'password'  => Hash::make('Admin@2026!'),
+                'phone'     => '+212600000000',
+                'role'      => User::ROLE_SUPER_ADMIN,
                 'is_active' => true,
-                'email_verified_at' => now(),
             ]
         );
+        $superAdmin->markEmailAsVerified();
+
+        // Admin avec permissions limitées (exemple)
+        $limitedAdmin = User::updateOrCreate(
+            ['email' => 'manager@autoecoles.ma'],
+            [
+                'name'      => 'Manager Admin',
+                'password'  => Hash::make('password'),
+                'phone'     => '+212600000010',
+                'role'      => User::ROLE_ADMIN,
+                'is_active' => true,
+            ]
+        );
+        $limitedAdmin->markEmailAsVerified();
+        // Grant limited permissions
+        $limitedAdmin->syncPermissions([
+            'manage_dashboard', 'manage_schools', 'manage_reviews',
+            'manage_contacts', 'manage_analytics',
+        ]);
 
         // Propriétaire d'auto-école test
-        User::updateOrCreate(
+        $schoolOwner = User::updateOrCreate(
             ['email' => 'ecole@autoecoles.ma'],
             [
                 'name' => 'Auto-École Test',
@@ -32,12 +50,12 @@ class AdminSeeder extends Seeder
                 'phone' => '+212600000001',
                 'role' => User::ROLE_SCHOOL_OWNER,
                 'is_active' => true,
-                'email_verified_at' => now(),
             ]
         );
+        $schoolOwner->markEmailAsVerified();
 
         // Utilisateur normal test
-        User::updateOrCreate(
+        $user = User::updateOrCreate(
             ['email' => 'user@autoecoles.ma'],
             [
                 'name' => 'Utilisateur Test',
@@ -45,13 +63,14 @@ class AdminSeeder extends Seeder
                 'phone' => '+212600000002',
                 'role' => User::ROLE_USER,
                 'is_active' => true,
-                'email_verified_at' => now(),
             ]
         );
+        $user->markEmailAsVerified();
 
         $this->command->info('Utilisateurs créés avec succès !');
-        $this->command->info('Admin: admin@autoecoles.ma / Admin@2026!');
-        $this->command->info('École: ecole@autoecoles.ma / password');
-        $this->command->info('User: user@autoecoles.ma / password');
+        $this->command->info('Super Admin : admin@autoecoles.ma / Admin@2026!');
+        $this->command->info('Admin limité : manager@autoecoles.ma / password');
+        $this->command->info('École : ecole@autoecoles.ma / password');
+        $this->command->info('User : user@autoecoles.ma / password');
     }
 }

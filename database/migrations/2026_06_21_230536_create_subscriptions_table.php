@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('stripe_subscription_id')->nullable()->unique();
             $table->timestamp('started_at');
             $table->timestamp('expires_at')->nullable();
-            $table->enum('status', ['active', 'past_due', 'canceled'])->default('active');
+            $table->enum('status', ['active', 'past_due', 'canceled', 'cancelled', 'expired'])->default('active');
             $table->boolean('cancel_at_period_end')->default(false);
             $table->timestamps();
             $table->index('status');

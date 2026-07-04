@@ -33,8 +33,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirection selon le rôle
-        return redirect()->intended($this->redirectByRole());
+        // Un `url.intended` peut avoir été posé par une visite antérieure (non authentifiée)
+        // d'une page protégée d'un AUTRE portail — on ne le laisse jamais dérouter la
+        // redirection vers le tableau de bord propre au rôle qui vient de se connecter.
+        $request->session()->forget('url.intended');
+
+        return redirect()->route(Auth::user()->redirectRouteName());
     }
 
     /**
@@ -48,23 +52,5 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
-    }
-
-    /**
-     * Rediriger selon le rôle de l'utilisateur
-     */
-    protected function redirectByRole(): string
-    {
-        $user = Auth::user();
-        
-        if ($user->role === 'admin') {
-            return route('admin.dashboard');
-        }
-        
-        if ($user->role === 'school_owner') {
-            return route('school.dashboard');
-        }
-        
-        return route('dashboard');
     }
 }
