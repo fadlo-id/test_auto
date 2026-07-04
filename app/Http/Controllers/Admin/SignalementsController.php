@@ -35,14 +35,18 @@ class SignalementsController extends Controller
                 'created_at'   => $s->created_at->toISOString(),
             ]);
 
+        $statusCounts = Signalement::selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         return Inertia::render('Admin/Signalements', [
             'signalements' => $signalements,
             'filters'      => $request->only(['search', 'status', 'type']),
             'stats'        => [
-                'total'     => Signalement::count(),
-                'pending'   => Signalement::where('status', 'pending')->count(),
-                'resolved'  => Signalement::where('status', 'resolved')->count(),
-                'dismissed' => Signalement::where('status', 'dismissed')->count(),
+                'total'     => $statusCounts->sum(),
+                'pending'   => $statusCounts->get('pending', 0),
+                'resolved'  => $statusCounts->get('resolved', 0),
+                'dismissed' => $statusCounts->get('dismissed', 0),
             ],
         ]);
     }

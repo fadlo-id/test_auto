@@ -79,7 +79,7 @@ Route::middleware('maintenance')->group(function () {
     Route::get('/ville/{city}', [SearchController::class, 'byCity'])->name('search.city');
     Route::get('/categorie/{code}', [SearchController::class, 'byCategory'])->name('search.category');
     Route::get('/auto-ecole/{slug}', [SchoolDetailController::class, 'show'])->name('school.detail');
-    Route::post('/auto-ecole/{slug}/review', [PublicReview::class, 'store'])->middleware(['auth', 'verified'])->name('school.detail.review');
+    Route::post('/auto-ecole/{slug}/review', [PublicReview::class, 'store'])->middleware(['auth', 'verified', 'throttle:10,1'])->name('school.detail.review');
     Route::post('/auto-ecole/{slug}/booking', [\App\Http\Controllers\Public\BookingController::class, 'store'])->name('school.detail.booking');
 });
 

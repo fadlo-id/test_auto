@@ -1,6 +1,5 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useState, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 const CONFIG = {
@@ -55,6 +54,7 @@ const CONFIG = {
 };
 
 const DURATION = 5000;
+const EXIT_DURATION = 150;
 
 export default function FlashMessage() {
     const { flash } = usePage().props;
@@ -63,10 +63,14 @@ export default function FlashMessage() {
     const [currentFlash, setCurrentFlash] = useState(null);
     const timerRef = useRef(null);
     const startRef = useRef(null);
+    const exitTimerRef  = useRef(null);
+    const enterFrameRef = useRef(null);
 
     const dismiss = () => {
         setVisible(false);
         clearInterval(timerRef.current);
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = setTimeout(() => setCurrentFlash(null), EXIT_DURATION);
     };
 
     useEffect(() => {
@@ -74,10 +78,14 @@ export default function FlashMessage() {
         const type = flash?.success ? 'success' : flash?.error ? 'error' : flash?.warning ? 'warning' : 'info';
         if (!msg) return;
 
+        clearTimeout(exitTimerRef.current);
+        cancelAnimationFrame(enterFrameRef.current);
+
         setCurrentFlash({ type, message: msg });
-        setVisible(true);
+        setVisible(false);
         setProgress(100);
         startRef.current = Date.now();
+        enterFrameRef.current = requestAnimationFrame(() => setVisible(true));
 
         clearInterval(timerRef.current);
         timerRef.current = setInterval(() => {
@@ -85,47 +93,46 @@ export default function FlashMessage() {
             const pct = Math.max(0, 100 - (elapsed / DURATION) * 100);
             setProgress(pct);
             if (pct <= 0) {
-                setVisible(false);
-                clearInterval(timerRef.current);
+                dismiss();
             }
         }, 50);
 
-        return () => clearInterval(timerRef.current);
+        return () => {
+            clearInterval(timerRef.current);
+            clearTimeout(exitTimerRef.current);
+            cancelAnimationFrame(enterFrameRef.current);
+        };
     }, [flash?.success, flash?.error, flash?.warning, flash?.info]);
 
-    const cfg = CONFIG[currentFlash?.type] ?? CONFIG.success;
+    if (!currentFlash) return null;
+
+    const cfg = CONFIG[currentFlash.type] ?? CONFIG.success;
 
     return (
-        <AnimatePresence>
-            {visible && currentFlash && (
-                <motion.div
-                    role="alert"
-                    aria-live="assertive"
-                    initial={{ opacity: 0, y: 16, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.15 } }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    className={`fixed bottom-5 right-5 z-[9999] w-full max-w-sm ${cfg.bg} border ${cfg.border} rounded-2xl shadow-xl dark:shadow-black/40 overflow-hidden`}
-                >
-                    {/* Progress bar */}
-                    <div className={`h-0.5 ${cfg.bar} transition-all ease-linear`} style={{ width: `${progress}%` }} />
+        <div
+            role="alert"
+            aria-live="assertive"
+            className={`fixed bottom-5 right-5 z-[9999] w-full max-w-sm ${cfg.bg} border ${cfg.border} rounded-2xl shadow-xl dark:shadow-black/40 overflow-hidden
+                        transition-all duration-200 ease-out
+                        ${visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}`}
+        >
+            {/* Progress bar */}
+            <div className={`h-0.5 ${cfg.bar} transition-all ease-linear`} style={{ width: `${progress}%` }} />
 
-                    <div className="flex items-start gap-3 p-4">
-                        {cfg.icon}
-                        <div className="flex-1 min-w-0 pt-0.5">
-                            <p className={`text-sm font-semibold ${cfg.text}`}>{cfg.title}</p>
-                            <p className="text-sm text-gray-600 dark:text-zinc-400 mt-0.5 leading-snug">{currentFlash.message}</p>
-                        </div>
-                        <button
-                            onClick={dismiss}
-                            aria-label="Fermer"
-                            className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
-                        >
-                            <XMarkIcon className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+            <div className="flex items-start gap-3 p-4">
+                {cfg.icon}
+                <div className="flex-1 min-w-0 pt-0.5">
+                    <p className={`text-sm font-semibold ${cfg.text}`}>{cfg.title}</p>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 mt-0.5 leading-snug">{currentFlash.message}</p>
+                </div>
+                <button
+                    onClick={dismiss}
+                    aria-label="Fermer"
+                    className="flex-shrink-0 mt-0.5 w-6 h-6 rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
+                >
+                    <XMarkIcon className="w-3.5 h-3.5" />
+                </button>
+            </div>
+        </div>
     );
 }

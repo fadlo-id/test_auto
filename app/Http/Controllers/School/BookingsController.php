@@ -35,10 +35,15 @@ class BookingsController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $statusCounts = Booking::where('auto_school_id', $school->id)
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         $stats = [
-            'total'     => Booking::where('auto_school_id', $school->id)->count(),
-            'pending'   => Booking::where('auto_school_id', $school->id)->where('status', 'pending')->count(),
-            'confirmed' => Booking::where('auto_school_id', $school->id)->where('status', 'confirmed')->count(),
+            'total'     => $statusCounts->sum(),
+            'pending'   => $statusCounts->get('pending', 0),
+            'confirmed' => $statusCounts->get('confirmed', 0),
         ];
 
         return Inertia::render('SchoolDashboard/Bookings', [

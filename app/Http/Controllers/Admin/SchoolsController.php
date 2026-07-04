@@ -89,6 +89,7 @@ class SchoolsController extends Controller
     public function destroy(AutoSchool $school): RedirectResponse
     {
         $school->delete();
+        $this->clearPublicCaches();
 
         return back()->with('success', 'Auto-ecole supprimee.');
     }
