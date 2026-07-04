@@ -20,7 +20,7 @@ function Modal({ title, onClose, children }) {
 const EMPTY = { code: '', discount_type: 'percent', discount_value: '', min_amount: '', max_uses: '', expires_at: '', is_active: true, description: '' };
 
 export default function Coupons({ coupons, filters, stats }) {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const [modal, setModal] = useState(null);
     const [form, setForm] = useState(EMPTY);
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -166,6 +166,13 @@ export default function Coupons({ coupons, filters, stats }) {
             {modal && (
                 <Modal title={modal === 'create' ? 'Nouveau coupon' : 'Modifier le coupon'} onClose={() => setModal(null)}>
                     <div className="space-y-4">
+                        {errors && Object.keys(errors).length > 0 && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                <ul className="list-disc list-inside">
+                                    {Object.values(errors).map((msg, i) => <li key={i}>{msg}</li>)}
+                                </ul>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Code *</label>

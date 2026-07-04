@@ -18,7 +18,7 @@ function Modal({ title, onClose, children }) {
 }
 
 export default function Regions({ regions, filters, stats }) {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const [modal, setModal] = useState(null);
     const [form, setForm] = useState({ name: '', code: '', capital: '', is_active: true });
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -141,6 +141,13 @@ export default function Regions({ regions, filters, stats }) {
             {modal && (
                 <Modal title={modal === 'create' ? 'Nouvelle région' : 'Modifier la région'} onClose={() => setModal(null)}>
                     <div className="space-y-4">
+                        {errors && Object.keys(errors).length > 0 && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                <ul className="list-disc list-inside">
+                                    {Object.values(errors).map((msg, i) => <li key={i}>{msg}</li>)}
+                                </ul>
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                             <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}

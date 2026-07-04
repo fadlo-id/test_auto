@@ -41,6 +41,24 @@ class AdminSeeder extends Seeder
             'manage_contacts', 'manage_analytics',
         ]);
 
+        // Admin with every permission — for exhaustive QA/E2E passes (not a demo account).
+        $qaRole = \App\Models\Role::where('name', 'admin')->first();
+        if ($qaRole) {
+            $qaAdmin = User::updateOrCreate(
+                ['email' => 'qa-admin@autoecoles.ma'],
+                [
+                    'name'      => 'QA Admin',
+                    'password'  => Hash::make('QaAdmin@2026!'),
+                    'phone'     => '+212600000011',
+                    'role'      => User::ROLE_ADMIN,
+                    'role_id'   => $qaRole->id,
+                    'is_active' => true,
+                ]
+            );
+            $qaAdmin->markEmailAsVerified();
+            $qaAdmin->syncPermissions(array_keys(User::ALL_PERMISSIONS));
+        }
+
         // Propriétaire d'auto-école test
         $schoolOwner = User::updateOrCreate(
             ['email' => 'ecole@autoecoles.ma'],

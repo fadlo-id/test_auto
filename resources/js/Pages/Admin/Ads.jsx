@@ -21,7 +21,7 @@ const POSITIONS = ['header', 'sidebar', 'footer', 'search', 'detail'];
 const EMPTY = { title: '', image_url: '', link_url: '', position: 'sidebar', is_active: true, starts_at: '', ends_at: '', notes: '' };
 
 export default function Ads({ ads, filters, stats }) {
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const [modal, setModal] = useState(null);
     const [form, setForm] = useState(EMPTY);
     const [search, setSearch] = useState(filters?.search ?? '');
@@ -140,6 +140,13 @@ export default function Ads({ ads, filters, stats }) {
             {modal && (
                 <Modal title={modal === 'create' ? 'Nouvelle publicité' : 'Modifier la publicité'} onClose={() => setModal(null)}>
                     <div className="space-y-4">
+                        {errors && Object.keys(errors).length > 0 && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                <ul className="list-disc list-inside">
+                                    {Object.values(errors).map((msg, i) => <li key={i}>{msg}</li>)}
+                                </ul>
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
                             <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
