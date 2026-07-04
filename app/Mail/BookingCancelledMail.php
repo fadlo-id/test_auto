@@ -4,13 +4,14 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /** Sent to the candidate when the school cancels their booking request. */
-class BookingCancelledMail extends Mailable
+class BookingCancelledMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
