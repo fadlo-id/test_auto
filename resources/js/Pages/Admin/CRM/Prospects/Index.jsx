@@ -344,10 +344,12 @@ export default function ProspectsIndex({ prospects, filters, stages, tags, admin
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Link href={route('admin.crm.prospects.show', p.id)}
+                                                    aria-label="Voir / modifier"
                                                     className="p-1.5 hover:bg-indigo-50 rounded-lg text-indigo-600">
                                                     <Pencil className="w-3.5 h-3.5" />
                                                 </Link>
                                                 <button onClick={() => destroy(p.id)}
+                                                    aria-label="Supprimer"
                                                     className="p-1.5 hover:bg-red-50 rounded-lg text-red-500">
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>

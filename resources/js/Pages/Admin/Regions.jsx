@@ -112,10 +112,10 @@ export default function Regions({ regions, filters, stats }) {
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => openEdit(r)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded">
+                                        <button onClick={() => openEdit(r)} aria-label="Modifier" className="p-1.5 text-gray-400 hover:text-blue-600 rounded">
                                             <Pencil className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => del(r.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded">
+                                        <button onClick={() => del(r.id)} aria-label="Supprimer" className="p-1.5 text-gray-400 hover:text-red-600 rounded">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>

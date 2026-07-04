@@ -94,6 +94,7 @@ export default function Gallery({ school, photos: initialPhotos }) {
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                     <button onClick={() => destroy(photo.id)}
+                                        aria-label="Supprimer la photo"
                                         className="bg-white text-red-600 rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors shadow-lg">
                                         🗑
                                     </button>

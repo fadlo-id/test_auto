@@ -153,7 +153,7 @@ export default function Signalements({ signalements, filters, stats }) {
                                             <AlertTriangle className="w-3.5 h-3.5" /> Traiter
                                         </button>
                                     )}
-                                    <button onClick={() => del(s.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded">
+                                    <button onClick={() => del(s.id)} aria-label="Supprimer" className="p-1.5 text-gray-400 hover:text-red-600 rounded">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>

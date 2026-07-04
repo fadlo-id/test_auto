@@ -117,8 +117,8 @@ export default function Ads({ ads, filters, stats }) {
                                 <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{ad.impressions_count}</span>
                             </div>
                             <div className="flex items-center justify-end gap-2">
-                                <button onClick={() => openEdit(ad)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded"><Pencil className="w-4 h-4" /></button>
-                                <button onClick={() => del(ad.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded"><Trash2 className="w-4 h-4" /></button>
+                                <button onClick={() => openEdit(ad)} aria-label="Modifier" className="p-1.5 text-gray-400 hover:text-blue-600 rounded"><Pencil className="w-4 h-4" /></button>
+                                <button onClick={() => del(ad.id)} aria-label="Supprimer" className="p-1.5 text-gray-400 hover:text-red-600 rounded"><Trash2 className="w-4 h-4" /></button>
                             </div>
                         </div>
                     </div>
