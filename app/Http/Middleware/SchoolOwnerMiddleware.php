@@ -15,7 +15,7 @@ class SchoolOwnerMiddleware
         }
 
         $user = auth()->user();
-        if (! $user->isSchoolOwner() && ! $user->isAdmin()) {
+        if (! $user->isSchoolOwner()) {
             abort(403, 'Accès non autorisé. Réservé aux propriétaires d\'auto-écoles.');
         }
 

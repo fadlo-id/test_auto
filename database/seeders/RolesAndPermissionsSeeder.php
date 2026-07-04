@@ -69,11 +69,19 @@ class RolesAndPermissionsSeeder extends Seeder
             ->values()
             ->toArray();
 
-        // super_admin / admin: full catalog (super_admin bypasses checks entirely;
-        // still associated for accurate display in the Permission Matrix).
+        // super_admin: full catalog, for display only — super_admin bypasses permission
+        // checks entirely via isSuperAdmin(), it never actually consults this pivot.
         $allIds = collect($permissionModels)->pluck('id')->toArray();
         $roles['super_admin']->permissions()->sync($allIds);
-        $roles['admin']->permissions()->sync($allIds);
+
+        // admin: NO role-wide permissions by default. Unlike super_admin, `hasPermission()`
+        // for this tier really does check the pivot (HasPermissions::hasPermission()) — syncing
+        // the full catalog here would silently grant every admin-tier user every permission
+        // regardless of what's individually checked for them in the Admins UI, defeating the
+        // granular permission system entirely. Access for this tier comes from individually
+        // granted permissions (`syncPermissions()`) and/or whatever the Super Admin explicitly
+        // assigns to this role later from the Permission Matrix page.
+        $roles['admin']->permissions()->sync([]);
 
         // support: customer-facing operations — sensible default, editable by Super Admin.
         $roles['support']->permissions()->sync($keyToId([

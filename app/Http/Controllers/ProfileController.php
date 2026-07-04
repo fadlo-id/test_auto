@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Payment;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,15 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // A school owner's account cascades into every payment/subscription/credit
+        // record for their school on delete (FK cascade, no soft-deletes) — block
+        // self-service deletion once there's real financial history to lose.
+        if ($user->autoSchool && Payment::where('auto_school_id', $user->autoSchool->id)->where('status', 'success')->exists()) {
+            return back()->with('error',
+                'Votre compte ne peut pas être supprimé automatiquement car votre auto-école a un historique de paiements. Veuillez contacter le support.'
+            );
+        }
 
         Auth::logout();
 

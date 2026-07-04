@@ -442,6 +442,7 @@ export default function Admins({ admins, stats, roles, filters, permissions_map 
                             <option value="">Tous les états</option>
                             <option value="active">Actif</option>
                             <option value="inactive">Suspendu</option>
+                            <option value="banned">Banni</option>
                         </select>
                         <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">
                             Filtrer

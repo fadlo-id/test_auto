@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\RbacService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -200,8 +201,16 @@ class AdminsController extends Controller
         $this->authorize('delete', $user);
 
         $name = $user->name;
+
+        try {
+            $user->delete();
+        } catch (QueryException $e) {
+            return back()->with('error',
+                "Impossible de supprimer «{$name}» : cet administrateur a un historique lié (notes CRM, rappels, emails ou SMS envoyés) qui doit être conservé. Désactivez le compte à la place."
+            );
+        }
+
         AuditLog::record('admin.deleted', $user, ['old' => $user->only(['name', 'email', 'role'])]);
-        $user->delete();
 
         return back()->with('success', "Administrateur «{$name}» supprimé.");
     }

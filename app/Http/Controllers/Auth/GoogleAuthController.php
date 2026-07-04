@@ -48,7 +48,20 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($user) {
-                // Existing password-based account with the same (Google-verified) email — link it.
+                // Only auto-link to an existing account if it has already proven ownership of
+                // this email through our own verification flow. Otherwise, someone could
+                // pre-register a victim's address (unverified, attacker knows the password)
+                // and later hijack the account the moment the real owner signs in with Google.
+                if (! $user->hasVerifiedEmail()) {
+                    Log::warning('Google OAuth linking blocked: matching account email is unverified', ['user_id' => $user->id]);
+
+                    return redirect()->route('login')->with('error',
+                        'Un compte existe déjà avec cette adresse email mais n\'a pas encore été vérifié. '
+                        . 'Veuillez vérifier votre email avant de vous connecter avec Google, ou contacter le support.'
+                    );
+                }
+
+                // Existing verified password-based account with the same (Google-verified) email — link it.
                 $user->forceFill(['google_id' => $googleUser->getId()])->save();
 
                 try {

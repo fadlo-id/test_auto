@@ -71,6 +71,30 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('google-456', $existing->fresh()->google_id);
     }
 
+    /**
+     * Regression: linking used to happen unconditionally on email match, so an
+     * attacker could pre-register a victim's email (unverified, attacker knows
+     * the password) and hijack the account the moment the real owner tried
+     * "Login with Google" with that same address.
+     */
+    public function test_google_login_does_not_link_to_an_unverified_existing_account(): void
+    {
+        $unverified = User::factory()->unverified()->create([
+            'email' => 'victim@example.com',
+            'role'  => 'user',
+        ]);
+
+        Socialite::shouldReceive('driver->user')
+            ->andReturn($this->fakeGoogleUser('google-attacker-proof', 'victim@example.com'));
+
+        $response = $this->get('/auth/google/callback');
+
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+        $this->assertNull($unverified->fresh()->google_id);
+        $this->assertSame(1, User::where('email', 'victim@example.com')->count());
+    }
+
     public function test_returning_google_user_logs_in_directly(): void
     {
         $existing = User::factory()->create(['google_id' => 'google-789', 'email' => 'returning@example.com']);
