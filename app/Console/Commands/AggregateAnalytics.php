@@ -24,7 +24,12 @@ class AggregateAnalytics extends Command
 
         AutoSchool::chunk(500, function ($schools) use ($date) {
             foreach ($schools as $school) {
-                $this->aggregateDailyStats($school, $date);
+                try {
+                    $this->aggregateDailyStats($school, $date);
+                } catch (\Throwable $e) {
+                    $this->error("Daily aggregation failed for school #{$school->id}: {$e->getMessage()}");
+                    \Illuminate\Support\Facades\Log::error('AggregateAnalytics daily failed', ['school_id' => $school->id, 'error' => $e->getMessage()]);
+                }
             }
         });
 
@@ -135,42 +140,47 @@ class AggregateAnalytics extends Command
 
         AutoSchool::chunk(500, function ($schools) use ($month, $year, $startOfMonth, $endOfMonth) {
             foreach ($schools as $school) {
-                $dailyStats = AnalyticsDailyStat::forSchool($school->id)
-                    ->whereBetween('date', [$startOfMonth, $endOfMonth])
-                    ->get();
+                try {
+                    $dailyStats = AnalyticsDailyStat::forSchool($school->id)
+                        ->whereBetween('date', [$startOfMonth, $endOfMonth])
+                        ->get();
 
-                if ($dailyStats->isEmpty()) {
-                    continue;
+                    if ($dailyStats->isEmpty()) {
+                        continue;
+                    }
+
+                    AnalyticsMonthStat::updateOrCreate(
+                        [
+                            'auto_school_id' => $school->id,
+                            'month' => $month,
+                            'year' => $year,
+                        ],
+                        [
+                            'total_views'      => $dailyStats->sum('total_views'),
+                            'unique_visitors'  => $dailyStats->sum('unique_visitors'),
+                            'phone_clicks'     => $dailyStats->sum('phone_clicks'),
+                            'whatsapp_clicks'  => $dailyStats->sum('whatsapp_clicks'),
+                            'website_clicks'   => $dailyStats->sum('website_clicks'),
+                            'facebook_clicks'  => $dailyStats->sum('facebook_clicks'),
+                            'instagram_clicks' => $dailyStats->sum('instagram_clicks'),
+                            'email_clicks'     => $dailyStats->sum('email_clicks'),
+                            'maps_clicks'      => $dailyStats->sum('maps_clicks'),
+                            'total_clicks'     => $dailyStats->sum('total_clicks'),
+                            'desktop_views'    => $dailyStats->sum('desktop_views'),
+                            'mobile_views'     => $dailyStats->sum('mobile_views'),
+                            'tablet_views'     => $dailyStats->sum('tablet_views'),
+                            'direct_traffic'   => $dailyStats->sum('direct_traffic'),
+                            'organic_traffic'  => $dailyStats->sum('organic_traffic'),
+                            'referral_traffic' => $dailyStats->sum('referral_traffic'),
+                            'paid_traffic'     => $dailyStats->sum('paid_traffic'),
+                            'new_leads'        => $dailyStats->sum('new_leads'),
+                            'converted_leads'  => $dailyStats->sum('converted_leads'),
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    $this->error("Monthly aggregation failed for school #{$school->id}: {$e->getMessage()}");
+                    \Illuminate\Support\Facades\Log::error('AggregateAnalytics monthly failed', ['school_id' => $school->id, 'error' => $e->getMessage()]);
                 }
-
-                AnalyticsMonthStat::updateOrCreate(
-                    [
-                        'auto_school_id' => $school->id,
-                        'month' => $month,
-                        'year' => $year,
-                    ],
-                    [
-                        'total_views'      => $dailyStats->sum('total_views'),
-                        'unique_visitors'  => $dailyStats->sum('unique_visitors'),
-                        'phone_clicks'     => $dailyStats->sum('phone_clicks'),
-                        'whatsapp_clicks'  => $dailyStats->sum('whatsapp_clicks'),
-                        'website_clicks'   => $dailyStats->sum('website_clicks'),
-                        'facebook_clicks'  => $dailyStats->sum('facebook_clicks'),
-                        'instagram_clicks' => $dailyStats->sum('instagram_clicks'),
-                        'email_clicks'     => $dailyStats->sum('email_clicks'),
-                        'maps_clicks'      => $dailyStats->sum('maps_clicks'),
-                        'total_clicks'     => $dailyStats->sum('total_clicks'),
-                        'desktop_views'    => $dailyStats->sum('desktop_views'),
-                        'mobile_views'     => $dailyStats->sum('mobile_views'),
-                        'tablet_views'     => $dailyStats->sum('tablet_views'),
-                        'direct_traffic'   => $dailyStats->sum('direct_traffic'),
-                        'organic_traffic'  => $dailyStats->sum('organic_traffic'),
-                        'referral_traffic' => $dailyStats->sum('referral_traffic'),
-                        'paid_traffic'     => $dailyStats->sum('paid_traffic'),
-                        'new_leads'        => $dailyStats->sum('new_leads'),
-                        'converted_leads'  => $dailyStats->sum('converted_leads'),
-                    ]
-                );
             }
         });
 

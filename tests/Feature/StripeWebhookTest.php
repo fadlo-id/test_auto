@@ -313,4 +313,33 @@ class StripeWebhookTest extends TestCase
         // Should have a new future expiry
         $this->assertTrue($sub->expires_at->greaterThan(now()));
     }
+
+    /**
+     * Regression: the "expiring soon" query used to have no dedup, so a subscription
+     * expiring in 7 days matched the query on every one of the ~8 daily runs before
+     * expiry, sending a fresh warning email each time instead of once.
+     */
+    public function test_check_expired_sends_expiring_soon_notification_only_once(): void
+    {
+        $sub = Subscription::create([
+            'auto_school_id' => $this->school->id,
+            'plan_id'        => $this->plan->id,
+            'status'         => 'active',
+            'on_trial'       => false,
+            'started_at'     => now()->subDays(23),
+            'expires_at'     => now()->addDays(5),
+        ]);
+
+        $this->artisan('subscriptions:check-expired')->assertSuccessful();
+        $sub->refresh();
+        $this->assertNotNull($sub->expiring_soon_notified_at);
+        $firstNotifiedAt = $sub->expiring_soon_notified_at;
+
+        // Run again the next day — still within the 7-day window, must NOT re-notify.
+        $this->travel(1)->days();
+        $this->artisan('subscriptions:check-expired')->assertSuccessful();
+        $sub->refresh();
+
+        $this->assertTrue($sub->expiring_soon_notified_at->equalTo($firstNotifiedAt));
+    }
 }

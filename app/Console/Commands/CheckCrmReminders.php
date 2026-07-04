@@ -15,6 +15,7 @@ class CheckCrmReminders extends Command
     {
         $due = CrmReminder::with(['prospect', 'assignedTo'])
             ->where('status', 'pending')
+            ->whereNull('notified_at')
             ->where('due_at', '<=', now()->addMinutes(15))
             ->where('due_at', '>=', now()->subMinutes(5))
             ->get();
@@ -23,6 +24,7 @@ class CheckCrmReminders extends Command
             if ($reminder->assignedTo) {
                 $reminder->assignedTo->notify(new CrmReminderDueNotification($reminder));
             }
+            $reminder->update(['notified_at' => now()]);
         }
 
         $this->info("CRM reminders checked — {$due->count()} notification(s) sent.");

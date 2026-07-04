@@ -75,12 +75,14 @@ class CheckExpiredSubscriptions extends Command
 
         $expiringSoon = Subscription::where('status', 'active')
             ->where('on_trial', false)
+            ->whereNull('expiring_soon_notified_at')
             ->whereBetween('expires_at', [now(), now()->addDays(7)])
             ->with('autoSchool:id,name,email,user_id')
             ->get();
 
         foreach ($expiringSoon as $subscription) {
             $this->notifications->notifySubscriptionExpiringSoon($subscription);
+            $subscription->update(['expiring_soon_notified_at' => now()]);
             $this->info("Expiring soon: #{$subscription->id} ({$subscription->autoSchool?->name})");
         }
 

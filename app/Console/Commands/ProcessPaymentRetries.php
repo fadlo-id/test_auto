@@ -114,8 +114,12 @@ class ProcessPaymentRetries extends Command
             ->get();
 
         foreach ($expiredTrials as $sub) {
-            $sub->cancel('trial_expired');
-            $this->line("  ✗ Trial expired for sub #{$sub->id}");
+            try {
+                $sub->cancel('trial_expired');
+                $this->line("  ✗ Trial expired for sub #{$sub->id}");
+            } catch (\Throwable $e) {
+                Log::error("Trial expiry failed for sub #{$sub->id}: {$e->getMessage()}");
+            }
         }
     }
 

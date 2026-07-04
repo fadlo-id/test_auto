@@ -7,21 +7,22 @@ class Subscription extends Model
 {
     protected $fillable = [
         'auto_school_id', 'plan_id', 'stripe_subscription_id',
-        'started_at', 'expires_at', 'trial_ends_at', 'on_trial',
+        'started_at', 'expires_at', 'expiring_soon_notified_at', 'trial_ends_at', 'on_trial',
         'status', 'cancel_at_period_end',
         'cancellation_reason', 'cancelled_at',
         'payment_retry_count', 'next_payment_retry_at',
     ];
 
     protected $casts = [
-        'started_at'             => 'datetime',
-        'expires_at'             => 'datetime',
-        'trial_ends_at'          => 'datetime',
-        'cancelled_at'           => 'datetime',
-        'next_payment_retry_at'  => 'datetime',
-        'on_trial'               => 'boolean',
-        'cancel_at_period_end'   => 'boolean',
-        'payment_retry_count'    => 'integer',
+        'started_at'                => 'datetime',
+        'expires_at'                => 'datetime',
+        'expiring_soon_notified_at' => 'datetime',
+        'trial_ends_at'             => 'datetime',
+        'cancelled_at'              => 'datetime',
+        'next_payment_retry_at'     => 'datetime',
+        'on_trial'                  => 'boolean',
+        'cancel_at_period_end'      => 'boolean',
+        'payment_retry_count'       => 'integer',
     ];
 
     public function autoSchool()

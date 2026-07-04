@@ -11,12 +11,13 @@ class CrmReminder extends Model
 
     protected $fillable = [
         'prospect_id', 'assigned_to', 'created_by',
-        'title', 'note', 'due_at', 'status', 'done_at',
+        'title', 'note', 'due_at', 'status', 'done_at', 'notified_at',
     ];
 
     protected $casts = [
-        'due_at'  => 'datetime',
-        'done_at' => 'datetime',
+        'due_at'      => 'datetime',
+        'done_at'     => 'datetime',
+        'notified_at' => 'datetime',
     ];
 
     public function prospect(): BelongsTo    { return $this->belongsTo(CrmProspect::class, 'prospect_id'); }
