@@ -25,6 +25,7 @@ export default function Ads({ ads, filters, stats }) {
     const [modal, setModal] = useState(null);
     const [form, setForm] = useState(EMPTY);
     const [search, setSearch] = useState(filters?.search ?? '');
+    const [processing, setProcessing] = useState(false);
 
     const openCreate = () => { setForm(EMPTY); setModal('create'); };
     const openEdit = (ad) => {
@@ -34,10 +35,13 @@ export default function Ads({ ads, filters, stats }) {
     };
 
     const submit = () => {
+        if (processing) return;
+        setProcessing(true);
+        const opts = { onSuccess: () => setModal(null), onFinish: () => setProcessing(false) };
         if (modal === 'create') {
-            router.post(route('admin.ads.store'), form, { onSuccess: () => setModal(null) });
+            router.post(route('admin.ads.store'), form, opts);
         } else {
-            router.put(route('admin.ads.update', modal.id), form, { onSuccess: () => setModal(null) });
+            router.put(route('admin.ads.update', modal.id), form, opts);
         }
     };
 
@@ -177,7 +181,7 @@ export default function Ads({ ads, filters, stats }) {
                         </label>
                         <div className="flex justify-end gap-3 pt-2">
                             <button onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Annuler</button>
-                            <button onClick={submit} className="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Enregistrer</button>
+                            <button onClick={submit} disabled={processing} className="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">{processing ? 'Enregistrement…' : 'Enregistrer'}</button>
                         </div>
                     </div>
                 </Modal>

@@ -114,7 +114,7 @@ function StageColumn({ stage, onDrop, onDragOver, onDragStart }) {
     );
 }
 
-export default function Pipeline({ stages, filters, admins }) {
+export default function Pipeline({ stages = [], filters, admins = [] }) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [assignedTo, setAssignedTo] = useState(filters.assigned_to ?? '');
     const [dragProspectId, setDragProspectId] = useState(null);

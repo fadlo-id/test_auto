@@ -488,7 +488,11 @@ export default function ProspectShow({ prospect, stages, tags, admins }) {
                                                                     className="p-1.5 hover:bg-green-100 rounded-lg text-green-600 text-xs">
                                                                     <CheckCircle className="w-4 h-4" />
                                                                 </button>
-                                                                <button onClick={() => router.delete(route('admin.crm.prospects.reminders.destroy', [prospect.id, r.id]), { preserveScroll: true })}
+                                                                <button onClick={() => {
+                                                                        if (!confirm('Supprimer ce rappel ?')) return;
+                                                                        router.delete(route('admin.crm.prospects.reminders.destroy', [prospect.id, r.id]), { preserveScroll: true });
+                                                                    }}
+                                                                    aria-label="Supprimer ce rappel"
                                                                     className="p-1.5 hover:bg-red-100 rounded-lg text-red-400 text-xs">
                                                                     <X className="w-4 h-4" />
                                                                 </button>

@@ -25,6 +25,7 @@ export default function Coupons({ coupons, filters, stats }) {
     const [form, setForm] = useState(EMPTY);
     const [search, setSearch] = useState(filters?.search ?? '');
     const [status, setStatus] = useState(filters?.status ?? '');
+    const [processing, setProcessing] = useState(false);
 
     const openCreate = () => { setForm(EMPTY); setModal('create'); };
     const openEdit = (c) => {
@@ -38,11 +39,14 @@ export default function Coupons({ coupons, filters, stats }) {
     };
 
     const submit = () => {
+        if (processing) return;
+        setProcessing(true);
         const payload = { ...form };
+        const opts = { onSuccess: () => setModal(null), onFinish: () => setProcessing(false) };
         if (modal === 'create') {
-            router.post(route('admin.coupons.store'), payload, { onSuccess: () => setModal(null) });
+            router.post(route('admin.coupons.store'), payload, opts);
         } else {
-            router.put(route('admin.coupons.update', modal.id), payload, { onSuccess: () => setModal(null) });
+            router.put(route('admin.coupons.update', modal.id), payload, opts);
         }
     };
 
@@ -214,7 +218,7 @@ export default function Coupons({ coupons, filters, stats }) {
                         </label>
                         <div className="flex justify-end gap-3 pt-2">
                             <button onClick={() => setModal(null)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">Annuler</button>
-                            <button onClick={submit} className="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Enregistrer</button>
+                            <button onClick={submit} disabled={processing} className="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed">{processing ? 'Enregistrement…' : 'Enregistrer'}</button>
                         </div>
                     </div>
                 </Modal>

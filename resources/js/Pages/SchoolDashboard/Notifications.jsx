@@ -6,7 +6,10 @@ export default function Notifications({ notifications, unread_count = 0, filters
 
     const markRead = (id) => router.post(route('school.notifications.read', id), {}, { preserveScroll: true });
     const markAll = () => router.post(route('school.notifications.read-all'), {}, { preserveScroll: true });
-    const destroy = (id) => router.delete(route('school.notifications.destroy', id), { preserveScroll: true });
+    const destroy = (id) => {
+        if (!confirm('Supprimer cette notification ?')) return;
+        router.delete(route('school.notifications.destroy', id), { preserveScroll: true });
+    };
 
     return (
         <SchoolLayout title="Notifications" school={school}>
@@ -50,7 +53,7 @@ export default function Notifications({ notifications, unread_count = 0, filters
                             </div>
                             <div className="flex gap-2 flex-shrink-0">
                                 {!notif.read_at && <button onClick={() => markRead(notif.id)} className="text-xs text-orange-600 hover:underline">Marquer lu</button>}
-                                <button onClick={() => destroy(notif.id)} className="text-xs text-red-500 hover:underline">✕</button>
+                                <button onClick={() => destroy(notif.id)} aria-label="Supprimer la notification" className="text-xs text-red-500 hover:underline">✕</button>
                             </div>
                         </div>
                     );

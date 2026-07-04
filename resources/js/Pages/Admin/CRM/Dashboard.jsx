@@ -38,7 +38,7 @@ function StatCard({ label, value, sub, icon: Icon, color = 'indigo' }) {
     );
 }
 
-export default function CRMDashboard({ stats, by_stage, by_source, monthly, due_reminders, recent }) {
+export default function CRMDashboard({ stats, by_stage, by_source, monthly, due_reminders = [], recent = [] }) {
     const pieData = Object.entries(by_source ?? {}).map(([key, val]) => ({
         name: SOURCE_LABELS[key] ?? key,
         value: val,
