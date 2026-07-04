@@ -72,10 +72,10 @@ const NAV_SECTIONS = [
         label: 'CRM',
         icon: ContactRound,
         items: [
-            { label: 'Tableau de bord CRM', href: 'admin.crm.dashboard',       icon: LayoutDashboard, permission: null },
-            { label: 'Pipeline',            href: 'admin.crm.pipeline',        icon: KanbanSquare,    permission: null },
-            { label: 'Prospects',           href: 'admin.crm.prospects.index', icon: ContactRound,    permission: null },
-            { label: 'Tags',                href: 'admin.crm.tags.index',      icon: Tag,             permission: null },
+            { label: 'Tableau de bord CRM', href: 'admin.crm.dashboard',       icon: LayoutDashboard, permission: 'manage_crm' },
+            { label: 'Pipeline',            href: 'admin.crm.pipeline',        icon: KanbanSquare,    permission: 'manage_crm' },
+            { label: 'Prospects',           href: 'admin.crm.prospects.index', icon: ContactRound,    permission: 'manage_crm' },
+            { label: 'Tags',                href: 'admin.crm.tags.index',      icon: Tag,             permission: 'manage_crm' },
         ],
     },
     {
