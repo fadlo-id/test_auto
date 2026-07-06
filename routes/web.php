@@ -57,6 +57,8 @@ use App\Http\Controllers\Public\ReviewController as PublicReview;
 use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\Public\StaticPageController;
 use App\Http\Controllers\Public\SchoolDetailController;
+use App\Http\Controllers\Public\SchoolApplicationController;
+use App\Http\Controllers\Admin\SchoolApplicationsController as AdminSchoolApplications;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -81,6 +83,13 @@ Route::middleware('maintenance')->group(function () {
     Route::get('/auto-ecole/{slug}', [SchoolDetailController::class, 'show'])->name('school.detail');
     Route::post('/auto-ecole/{slug}/review', [PublicReview::class, 'store'])->middleware(['auth', 'verified', 'throttle:10,1'])->name('school.detail.review');
     Route::post('/auto-ecole/{slug}/booking', [\App\Http\Controllers\Public\BookingController::class, 'store'])->name('school.detail.booking');
+
+    // Onboarding: visitor submits a moderation request to register their driving school
+    Route::get('/ajouter-auto-ecole', [SchoolApplicationController::class, 'create'])->name('school-application.create');
+    Route::post('/ajouter-auto-ecole', [SchoolApplicationController::class, 'store'])
+        ->middleware('throttle:5,60')
+        ->name('school-application.store');
+    Route::get('/ajouter-auto-ecole/merci', [SchoolApplicationController::class, 'success'])->name('school-application.success');
 });
 
 // Static pages — served from CMS (SiteSettings) with fallback to hardcoded content
@@ -156,6 +165,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/auto-schools/export',                       [AdminSchools::class, 'export'])->name('auto-schools.export');
             Route::get('/services',                                  [AdminServices::class, 'index'])->name('services.index');
             Route::delete('/services/{service}',                     [AdminServices::class, 'destroy'])->name('services.destroy');
+
+            Route::get('/school-applications',                            [AdminSchoolApplications::class, 'index'])->name('school-applications.index');
+            Route::get('/school-applications/{application}',               [AdminSchoolApplications::class, 'show'])->name('school-applications.show');
+            Route::post('/school-applications/{application}/approve',      [AdminSchoolApplications::class, 'approve'])->name('school-applications.approve');
+            Route::post('/school-applications/{application}/reject',       [AdminSchoolApplications::class, 'reject'])->name('school-applications.reject');
+            Route::delete('/school-applications/{application}',            [AdminSchoolApplications::class, 'destroy'])->name('school-applications.destroy');
         });
 
         // Reviews

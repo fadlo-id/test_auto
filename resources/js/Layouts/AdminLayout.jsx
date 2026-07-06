@@ -11,6 +11,7 @@ import {
     Cog6ToothIcon as Settings, AdjustmentsHorizontalIcon as Sliders, ShieldCheckIcon as ShieldCheck, ClipboardDocumentListIcon as ScrollText, CircleStackIcon as Database,
     UserIcon as User, ArrowRightStartOnRectangleIcon as LogOut, MagnifyingGlassIcon as Search, Bars3Icon as Menu, XMarkIcon as X, ChevronDownIcon as ChevronDown, ArrowTopRightOnSquareIcon as ExternalLink,
     EnvelopeIcon as Mail, InboxStackIcon as InboxIcon, UserCircleIcon as ContactRound, Square3Stack3DIcon as KanbanSquare, TagIcon as Tag,
+    ClipboardDocumentCheckIcon as ClipboardCheck,
 } from '@heroicons/react/24/outline';
 
 /* ── Navigation structure ──────────────────────────────────────────── */
@@ -28,6 +29,7 @@ const NAV_SECTIONS = [
             { label: 'Utilisateurs',    href: 'admin.users.index',          icon: Users,        permission: 'manage_users'   },
             { label: 'Administrateurs', href: 'admin.admins.index',         icon: ShieldCheck,  permission: 'super_admin'    },
             { label: 'Auto-écoles',     href: 'admin.auto-schools.index',   icon: Building2,    permission: 'manage_schools' },
+            { label: 'Candidatures',    href: 'admin.school-applications.index', icon: ClipboardCheck, permission: 'manage_schools' },
             { label: 'Instructeurs',    href: 'admin.instructors.index',    icon: GraduationCap,permission: 'manage_users'   },
             { label: 'Élèves',          href: 'admin.students.index',       icon: BookOpen,     permission: 'manage_users'   },
         ],

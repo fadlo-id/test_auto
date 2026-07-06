@@ -106,7 +106,7 @@ function PlanCard({ plan, featured = false }) {
                     ))}
                 </ul>
             )}
-            <Link href={route('register')}
+            <Link href={route('school-application.create')}
                 className={`mt-auto block text-center py-3 rounded-xl font-semibold text-sm transition-colors ${
                     featured
                         ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md'
@@ -346,7 +346,7 @@ export default function HomePage({ featured = [], latest = [], cities = [], cate
                         Inscrivez votre auto-école gratuitement et commencez à recevoir des demandes d'inscription dès aujourd'hui.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Link href={route('register')}
+                        <Link href={route('school-application.create')}
                             className="px-8 py-3.5 bg-white text-orange-700 font-bold rounded-xl hover:bg-orange-50 transition-colors shadow-lg text-sm">
                             Inscrire mon école gratuitement
                         </Link>

@@ -49,7 +49,7 @@ export default function PublicNavbar({ transparent = false }) {
                                 className={`hidden sm:inline-flex text-sm px-3 py-2 rounded-xl font-medium border transition-colors ${btnBorder}`}>
                                 Connexion
                             </Link>
-                            <Link href={route('register')}
+                            <Link href={route('school-application.create')}
                                 className="text-sm px-4 py-2 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition-colors shadow-sm">
                                 Inscrire mon école
                             </Link>

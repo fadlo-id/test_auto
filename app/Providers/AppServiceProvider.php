@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Permission as PermissionModel;
 use App\Models\Review;
 use App\Models\Role;
+use App\Models\SchoolApplication;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Observers\UserObserver;
@@ -16,6 +17,7 @@ use App\Policies\PaymentPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\ReviewPolicy;
 use App\Policies\RolePolicy;
+use App\Policies\SchoolApplicationPolicy;
 use App\Policies\SubscriptionPolicy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         User::class           => AdminPolicy::class,
         Role::class           => RolePolicy::class,
         PermissionModel::class => PermissionPolicy::class,
+        SchoolApplication::class => SchoolApplicationPolicy::class,
     ];
 
     public function register(): void

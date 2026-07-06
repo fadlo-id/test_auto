@@ -46,7 +46,7 @@ export default function PublicFooter() {
                         <h3 className="text-white font-semibold text-sm mb-4 uppercase tracking-wide">Auto-écoles</h3>
                         <ul className="space-y-2.5">
                             {[
-                                { label: 'Inscrire mon école',  href: route('register') },
+                                { label: 'Inscrire mon école',  href: route('school-application.create') },
                                 { label: 'Nos plans',           href: route('about') },
                                 { label: 'Connexion',           href: route('login') },
                             ].map((l) => (
