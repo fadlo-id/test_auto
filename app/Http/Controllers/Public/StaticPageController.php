@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\SiteSetting;
 use App\Services\SeoService;
 use Inertia\Inertia;
@@ -10,6 +11,22 @@ use Inertia\Response;
 
 class StaticPageController extends Controller
 {
+    public function pricing(): Response
+    {
+        $plans = Plan::where('is_active', true)
+            ->orderBy('price')
+            ->get(['id', 'name', 'price', 'billing_period', 'description', 'features']);
+
+        return Inertia::render('StaticPages/Pricing', [
+            'plans' => $plans,
+            'seo'   => app(SeoService::class)->staticPage(
+                'tarifs',
+                'Tarifs pour auto-écoles',
+                'Découvrez nos formules d\'abonnement pour auto-écoles : visibilité accrue, badge vérifié et gestion de votre présence en ligne sur AutoEcoles.ma.',
+            ),
+        ]);
+    }
+
     public function about(): Response
     {
         return Inertia::render('StaticPages/About', [

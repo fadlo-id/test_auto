@@ -1,9 +1,15 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { SlidersHorizontal, X, Search, LocateFixed, Loader2 } from 'lucide-react';
 import PublicNavbar from '@/Components/PublicNavbar';
 import PublicFooter from '@/Components/PublicFooter';
 import SchoolCard   from '@/Components/SchoolCard';
 import Breadcrumb   from '@/Components/Breadcrumb';
+import FilterChip   from '@/Components/UI/FilterChip';
+import EmptyState   from '@/Components/UI/EmptyState';
+import { SkeletonCard } from '@/Components/UI/Skeleton';
+
+const isFeatured = (school) => !!school.featured_until && new Date(school.featured_until) > new Date();
 
 const SORT_LABELS = {
     name:     'Nom (A–Z)',
@@ -14,6 +20,8 @@ const SORT_LABELS = {
 
 /* ── Filter panel (reused in sidebar + mobile drawer) ─────── */
 function FilterPanel({ filters, setFilters, cities, categories, onApply, onClear }) {
+    const [locating, setLocating] = useState(false);
+
     const field = (key) => ({
         value: filters[key],
         onChange: (e) => setFilters({ ...filters, [key]: e.target.value }),
@@ -21,8 +29,32 @@ function FilterPanel({ filters, setFilters, cities, categories, onApply, onClear
 
     const inputCls = 'w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white';
 
+    const useMyLocation = () => {
+        if (!navigator.geolocation) return;
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setLocating(false);
+                setFilters({
+                    ...filters,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    sort: 'distance',
+                });
+                onApply({ lat: pos.coords.latitude, lng: pos.coords.longitude, sort: 'distance' });
+            },
+            () => setLocating(false),
+            { timeout: 8000 }
+        );
+    };
+
     return (
         <div className="space-y-5">
+            <button type="button" onClick={useMyLocation} disabled={locating}
+                className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-orange-300 hover:text-orange-700 transition-colors disabled:opacity-60">
+                {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+                {locating ? 'Localisation…' : 'Auto-écoles près de moi'}
+            </button>
             <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Mot-clé</label>
                 <input type="text" {...field('search')} placeholder="Nom de l'école…"
@@ -81,8 +113,9 @@ function FilterPanel({ filters, setFilters, cities, categories, onApply, onClear
 function ActiveChips({ filters, categories, onRemove }) {
     const chips = [];
     if (filters.search)    chips.push({ key: 'search',    label: `"${filters.search}"` });
-    if (filters.city)      chips.push({ key: 'city',      label: `📍 ${filters.city}` });
-    if (filters.min_rating) chips.push({ key: 'min_rating', label: `${filters.min_rating}★+` });
+    if (filters.city)      chips.push({ key: 'city',      label: filters.city });
+    if (filters.min_rating) chips.push({ key: 'min_rating', label: `${filters.min_rating}★ et plus` });
+    if (filters.lat && filters.lng) chips.push({ key: 'lat', label: 'Près de moi', extraKeys: ['lng'] });
     if (filters.category) {
         const cat = categories.find((c) => String(c.id) === String(filters.category));
         if (cat) chips.push({ key: 'category', label: `Permis ${cat.code}` });
@@ -91,10 +124,7 @@ function ActiveChips({ filters, categories, onRemove }) {
     return (
         <div className="flex flex-wrap gap-2 mb-4">
             {chips.map((c) => (
-                <span key={c.key} className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-medium px-3 py-1 rounded-full">
-                    {c.label}
-                    <button onClick={() => onRemove(c.key)} className="hover:text-orange-900 text-orange-400 leading-none" aria-label={`Retirer filtre ${c.label}`}>×</button>
-                </span>
+                <FilterChip key={c.key} label={c.label} onRemove={() => onRemove(c.key, c.extraKeys)} />
             ))}
         </div>
     );
@@ -111,17 +141,28 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
         sort:       serverFilters.sort       ?? 'name',
     });
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const applyFilters = useCallback(() => {
-        const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
+    useEffect(() => {
+        const remove = [
+            router.on('start', () => setLoading(true)),
+            router.on('finish', () => setLoading(false)),
+        ];
+        return () => remove.forEach((fn) => fn());
+    }, []);
+
+    const applyFilters = useCallback((overrides = {}) => {
+        const merged = { ...filters, ...overrides };
+        const params = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== '' && v != null));
         router.get(route('search'), params, { preserveScroll: true, preserveState: true });
         setDrawerOpen(false);
     }, [filters]);
 
-    const removeFilter = useCallback((key) => {
+    const removeFilter = useCallback((key, extraKeys = []) => {
         const next = { ...filters, [key]: '' };
+        extraKeys.forEach((k) => { next[k] = ''; });
         setFilters(next);
-        const params = Object.fromEntries(Object.entries(next).filter(([, v]) => v !== ''));
+        const params = Object.fromEntries(Object.entries(next).filter(([, v]) => v !== '' && v != null));
         router.get(route('search'), params, { preserveScroll: true, preserveState: true });
     }, [filters]);
 
@@ -166,9 +207,7 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
                             aria-label="Ouvrir les filtres"
                             aria-expanded={drawerOpen}
                             className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-orange-300 hover:text-orange-700 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
+                            <SlidersHorizontal className="w-4 h-4" />
                             Filtres
                         </button>
                     </div>
@@ -196,10 +235,14 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
                         <main className="flex-1 min-w-0">
                             <ActiveChips filters={filters} categories={categories} onRemove={removeFilter} />
 
-                            {schools?.data?.length > 0 ? (
+                            {loading ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8" aria-live="polite" aria-busy="true">
+                                    {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} lines={2} />)}
+                                </div>
+                            ) : schools?.data?.length > 0 ? (
                                 <>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
-                                        {schools.data.map((s) => <SchoolCard key={s.id} school={s} />)}
+                                        {schools.data.map((s) => <SchoolCard key={s.id} school={s} featured={isFeatured(s)} />)}
                                     </div>
 
                                     {/* Pagination */}
@@ -222,14 +265,18 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
                                     )}
                                 </>
                             ) : (
-                                <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center shadow-sm">
-                                    <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">🔍</div>
-                                    <p className="font-semibold text-gray-700 mb-2">Aucune auto-école trouvée</p>
-                                    <p className="text-gray-400 text-sm mb-5">Essayez d'autres critères ou élargissez votre recherche.</p>
-                                    <button onClick={clearFilters}
-                                        className="px-5 py-2 bg-orange-600 text-white rounded-xl text-sm font-medium hover:bg-orange-700 transition-colors">
-                                        Effacer les filtres
-                                    </button>
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                    <EmptyState
+                                        icon={Search}
+                                        title="Aucune auto-école trouvée"
+                                        description="Essayez d'autres critères ou élargissez votre recherche : une autre ville, une catégorie plus large, ou une note minimale plus basse."
+                                        action={
+                                            <button onClick={clearFilters}
+                                                className="px-5 py-2 bg-orange-600 text-white rounded-xl text-sm font-medium hover:bg-orange-700 transition-colors">
+                                                Effacer les filtres
+                                            </button>
+                                        }
+                                    />
                                 </div>
                             )}
                         </main>
@@ -248,7 +295,7 @@ export default function SearchPage({ schools, cities = [], categories = [], filt
                             <button onClick={() => setDrawerOpen(false)}
                                 aria-label="Fermer les filtres"
                                 className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
-                                ✕
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
                         <FilterPanel

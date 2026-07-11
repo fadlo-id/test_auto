@@ -53,6 +53,7 @@ use App\Http\Controllers\User\DashboardController as UserDashboard;
 use App\Http\Controllers\User\ReviewsController as UserReviews;
 use App\Http\Controllers\User\FavoritesController as UserFavorites;
 use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\BlogController;
 use App\Http\Controllers\Public\ReviewController as PublicReview;
 use App\Http\Controllers\Public\SearchController;
 use App\Http\Controllers\Public\StaticPageController;
@@ -81,6 +82,8 @@ Route::middleware('maintenance')->group(function () {
     Route::get('/ville/{city}', [SearchController::class, 'byCity'])->name('search.city');
     Route::get('/categorie/{code}', [SearchController::class, 'byCategory'])->name('search.category');
     Route::get('/auto-ecole/{slug}', [SchoolDetailController::class, 'show'])->name('school.detail');
+    Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+    Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
     Route::post('/auto-ecole/{slug}/review', [PublicReview::class, 'store'])->middleware(['auth', 'verified', 'throttle:10,1'])->name('school.detail.review');
     Route::post('/auto-ecole/{slug}/booking', [\App\Http\Controllers\Public\BookingController::class, 'store'])->name('school.detail.booking');
 
@@ -94,6 +97,7 @@ Route::middleware('maintenance')->group(function () {
 
 // Static pages — served from CMS (SiteSettings) with fallback to hardcoded content
 Route::middleware('maintenance')->group(function () {
+    Route::get('/tarifs',          [StaticPageController::class, 'pricing'])->name('pricing');
     Route::get('/a-propos',        [StaticPageController::class, 'about'])->name('about');
     Route::get('/faq',             [StaticPageController::class, 'faq'])->name('faq');
     Route::get('/confidentialite', [StaticPageController::class, 'privacy'])->name('privacy');

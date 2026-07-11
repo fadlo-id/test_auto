@@ -28,12 +28,18 @@ export default function ResetPassword({ token, email }) {
 
     return (
         <GuestLayout>
-            <Head title="Reset Password" />
+            <Head title="Réinitialiser le mot de passe" />
 
-            <form onSubmit={submit}>
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-gray-900">Choisir un nouveau mot de passe</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                    Votre nouveau mot de passe doit être différent des précédents.
+                </p>
+            </div>
+
+            <form onSubmit={submit} className="space-y-4">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
+                    <InputLabel htmlFor="email" value="Adresse email" />
                     <TextInput
                         id="email"
                         type="email"
@@ -43,13 +49,11 @@ export default function ResetPassword({ token, email }) {
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
+                <div>
+                    <InputLabel htmlFor="password" value="Nouveau mot de passe" />
                     <TextInput
                         id="password"
                         type="password"
@@ -60,13 +64,11 @@ export default function ResetPassword({ token, email }) {
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
-
+                <div>
+                    <InputLabel htmlFor="password_confirmation" value="Confirmer le mot de passe" />
                     <TextInput
                         type="password"
                         id="password_confirmation"
@@ -76,15 +78,15 @@ export default function ResetPassword({ token, email }) {
                         autoComplete="new-password"
                         onChange={(e) => setData('password_confirmation', e.target.value)}
                     />
-
                     <InputError message={errors.password_confirmation} className="mt-2" />
                 </div>
 
-                <div className="flex items-center justify-end mt-4">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Reset Password
-                    </PrimaryButton>
-                </div>
+                <PrimaryButton
+                    className="w-full justify-center bg-orange-600 hover:bg-orange-700"
+                    disabled={processing}
+                >
+                    {processing ? 'Enregistrement…' : 'Réinitialiser le mot de passe'}
+                </PrimaryButton>
             </form>
         </GuestLayout>
     );

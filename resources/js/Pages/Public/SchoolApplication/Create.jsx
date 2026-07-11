@@ -1,7 +1,14 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { Check, X, ShieldCheck, TrendingUp, Clock3, CloudCheck } from 'lucide-react';
 import PublicNavbar from '@/Components/PublicNavbar';
 import PublicFooter from '@/Components/PublicFooter';
+
+const BENEFITS = [
+    { icon: TrendingUp, title: 'Plus de visibilité', desc: 'Votre fiche apparaît dans les recherches par ville et par catégorie de permis.' },
+    { icon: ShieldCheck, title: 'Badge Vérifié', desc: 'Une fois approuvée, votre auto-école affiche un badge de confiance auprès des candidats.' },
+    { icon: Clock3, title: 'Réponse sous 2 à 5 jours', desc: "C'est gratuit — votre candidature est examinée par notre équipe avant mise en ligne." },
+];
 
 const DAYS = [
     ['monday', 'Lundi'],
@@ -163,8 +170,8 @@ function Dropzone({ label, multiple, files, onFiles, error, max = 10 }) {
                                     else onFiles(null);
                                 }}
                                 aria-label="Retirer l'image"
-                                className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                            >✕</button>
+                                className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            ><X className="w-3.5 h-3.5" /></button>
                         </div>
                     ))}
                 </div>
@@ -173,14 +180,33 @@ function Dropzone({ label, multiple, files, onFiles, error, max = 10 }) {
     );
 }
 
+function DraftIndicator({ pulse }) {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (pulse === 0) return;
+        setVisible(true);
+        const id = setTimeout(() => setVisible(false), 2000);
+        return () => clearTimeout(id);
+    }, [pulse]);
+
+    return (
+        <span className={`inline-flex items-center gap-1.5 text-xs text-gray-400 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+            <CloudCheck className="w-3.5 h-3.5" />
+            Brouillon enregistré
+        </span>
+    );
+}
+
 export default function Create({ categories = [] }) {
     const draft = useMemo(() => loadDraft(), []);
     const { data, setData, post, processing, errors, transform } = useForm(draft || EMPTY_FORM);
     const [step, setStep] = useState(0);
     const [projectDraft, setProjectDraft] = useState({ title: '', description: '', year: '' });
+    const [savePulse, setSavePulse] = useState(0);
 
     useEffect(() => {
-        const id = setTimeout(() => saveDraft(data), 400);
+        const id = setTimeout(() => { saveDraft(data); setSavePulse((n) => n + 1); }, 400);
         return () => clearTimeout(id);
     }, [data]);
 
@@ -222,7 +248,16 @@ export default function Create({ categories = [] }) {
                 <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white py-14 px-4">
                     <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-3xl font-bold mb-3">Ajouter votre auto-école</h1>
-                        <p className="text-orange-100">Rejoignez AutoEcoles.ma — votre candidature sera examinée par notre équipe sous quelques jours.</p>
+                        <p className="text-orange-100 mb-8">Rejoignez AutoEcoles.ma — c'est gratuit et votre candidature sera examinée par notre équipe sous quelques jours.</p>
+                        <div className="grid sm:grid-cols-3 gap-4 text-left">
+                            {BENEFITS.map(({ icon: Icon, title, desc }) => (
+                                <div key={title} className="bg-white/10 border border-white/15 rounded-2xl p-4 backdrop-blur-sm">
+                                    <Icon className="w-5 h-5 text-orange-200 mb-2" strokeWidth={1.75} />
+                                    <p className="font-semibold text-sm mb-1">{title}</p>
+                                    <p className="text-orange-100/90 text-xs leading-relaxed">{desc}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -233,16 +268,21 @@ export default function Create({ categories = [] }) {
                             {STEPS.map((label, i) => (
                                 <li key={label} className="flex items-center">
                                     <button type="button" onClick={() => setStep(i)}
+                                        aria-label={`Étape ${i + 1} : ${label}`}
+                                        aria-current={i === step ? 'step' : undefined}
                                         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
                                             i === step ? 'bg-orange-600 text-white' : i < step ? 'bg-orange-100 text-orange-700' : 'bg-gray-200 text-gray-500'
                                         }`}>
-                                        {i + 1}
+                                        {i < step ? <Check className="w-4 h-4" strokeWidth={2.5} /> : i + 1}
                                     </button>
                                     {i < STEPS.length - 1 && <div className={`w-6 h-0.5 ${i < step ? 'bg-orange-300' : 'bg-gray-200'}`} />}
                                 </li>
                             ))}
                         </ol>
-                        <p className="text-sm font-semibold text-gray-700 mt-3">{step + 1}. {STEPS[step]}</p>
+                        <div className="flex items-center justify-between mt-3">
+                            <p className="text-sm font-semibold text-gray-700">{step + 1}. {STEPS[step]}</p>
+                            <DraftIndicator pulse={savePulse} />
+                        </div>
                     </div>
 
                     {stepErrors && (
@@ -448,7 +488,7 @@ export default function Create({ categories = [] }) {
                                             <p className="text-sm font-medium text-gray-800">{p.title}{p.year ? ` (${p.year})` : ''}</p>
                                             {p.description && <p className="text-xs text-gray-500 mt-0.5">{p.description}</p>}
                                         </div>
-                                        <button type="button" onClick={() => removeProject(i)} aria-label="Retirer" className="text-red-400 hover:text-red-600 text-sm shrink-0">✕</button>
+                                        <button type="button" onClick={() => removeProject(i)} aria-label="Retirer" className="text-red-400 hover:text-red-600 shrink-0"><X className="w-4 h-4" /></button>
                                     </div>
                                 ))}
 

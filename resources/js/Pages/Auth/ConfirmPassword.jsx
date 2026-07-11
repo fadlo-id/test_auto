@@ -25,16 +25,18 @@ export default function ConfirmPassword() {
 
     return (
         <GuestLayout>
-            <Head title="Confirm Password" />
+            <Head title="Confirmer le mot de passe" />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your password before continuing.
+            <div className="mb-6 text-center">
+                <h1 className="text-2xl font-bold text-gray-900">Confirmez votre mot de passe</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                    Ceci est une zone sécurisée. Merci de confirmer votre mot de passe avant de continuer.
+                </p>
             </div>
 
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
+            <form onSubmit={submit} className="space-y-4">
+                <div>
+                    <InputLabel htmlFor="password" value="Mot de passe" />
                     <TextInput
                         id="password"
                         type="password"
@@ -44,15 +46,15 @@ export default function ConfirmPassword() {
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="flex items-center justify-end mt-4">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
+                <PrimaryButton
+                    className="w-full justify-center bg-orange-600 hover:bg-orange-700"
+                    disabled={processing}
+                >
+                    {processing ? 'Vérification…' : 'Confirmer'}
+                </PrimaryButton>
             </form>
         </GuestLayout>
     );

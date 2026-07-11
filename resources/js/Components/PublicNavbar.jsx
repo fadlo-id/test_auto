@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Bars3Icon, XMarkIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { Menu, X, ArrowRight } from 'lucide-react';
 import VerificationBanner from '@/Components/VerificationBanner';
 
 export default function PublicNavbar({ transparent = false }) {
@@ -30,6 +30,12 @@ export default function PublicNavbar({ transparent = false }) {
                     <Link href={route('search')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${linkColor}`}>
                         Rechercher
                     </Link>
+                    <Link href={route('pricing')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${linkColor}`}>
+                        Tarifs
+                    </Link>
+                    <Link href={route('blog.index')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${linkColor}`}>
+                        Blog
+                    </Link>
                     <Link href={route('about')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${linkColor}`}>
                         À propos
                     </Link>
@@ -41,7 +47,7 @@ export default function PublicNavbar({ transparent = false }) {
                         <Link href={route('dashboard')}
                             className="inline-flex items-center gap-1.5 text-sm px-4 py-2 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition-colors shadow-sm">
                             Mon espace
-                            <ArrowRightIcon className="w-3.5 h-3.5" />
+                            <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                     ) : (
                         <>
@@ -58,7 +64,7 @@ export default function PublicNavbar({ transparent = false }) {
 
                     {/* Mobile menu button */}
                     <button onClick={() => setOpen(!open)} className={`sm:hidden p-2 rounded-lg ${linkColor}`} aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}>
-                        {open ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
+                        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
@@ -67,6 +73,8 @@ export default function PublicNavbar({ transparent = false }) {
             {open && (
                 <div className={`sm:hidden border-t ${transparent ? 'bg-gray-900/95 border-white/10' : 'bg-white border-gray-100'} px-4 py-3 space-y-1`}>
                     <Link href={route('search')} className={`block px-3 py-2 rounded-lg text-sm font-medium ${linkColor}`} onClick={() => setOpen(false)}>Rechercher</Link>
+                    <Link href={route('pricing')} className={`block px-3 py-2 rounded-lg text-sm font-medium ${linkColor}`} onClick={() => setOpen(false)}>Tarifs</Link>
+                    <Link href={route('blog.index')} className={`block px-3 py-2 rounded-lg text-sm font-medium ${linkColor}`} onClick={() => setOpen(false)}>Blog</Link>
                     <Link href={route('about')}  className={`block px-3 py-2 rounded-lg text-sm font-medium ${linkColor}`} onClick={() => setOpen(false)}>À propos</Link>
                     {!auth?.user && (
                         <Link href={route('login')} className={`block px-3 py-2 rounded-lg text-sm font-medium ${linkColor}`} onClick={() => setOpen(false)}>Connexion</Link>

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { CheckIcon } from '@heroicons/react/24/solid';
+import { Check } from 'lucide-react';
 
 const STATS = [
     { value: '500+', label: 'Auto-écoles' },
@@ -51,7 +51,7 @@ export default function GuestLayout({ children }) {
                             {FEATURES.map((f) => (
                                 <div key={f.text} className="flex items-center gap-2.5 text-sm text-orange-50">
                                     <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <CheckIcon className="w-3 h-3 text-white" strokeWidth={3} />
+                                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                     </span>
                                     {f.text}
                                 </div>

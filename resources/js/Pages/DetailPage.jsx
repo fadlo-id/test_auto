@@ -1,9 +1,22 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+    Phone, Mail, Globe, Heart, MapPin, ShieldCheck, Check, X,
+    ChevronLeft, ChevronRight, AlertTriangle, Car, CheckCircle2, School, MessageCircle, Images,
+} from 'lucide-react';
 import PublicNavbar from '@/Components/PublicNavbar';
 import PublicFooter from '@/Components/PublicFooter';
 import Breadcrumb from '@/Components/Breadcrumb';
+import RatingStars from '@/Components/UI/RatingStars';
+import Accordion from '@/Components/UI/Accordion';
 import { getFingerprint } from '@/utils/fingerprint';
+
+const DETAIL_FAQ = [
+    { question: 'Comment réserver une place dans cette auto-école ?', answer: "Utilisez le formulaire « Demande d'inscription » dans la colonne de droite, ou contactez directement l'auto-école par téléphone ou WhatsApp." },
+    { question: 'Les avis affichés sont-ils vérifiés ?', answer: "Oui. Chaque avis est modéré avant publication et ne peut être laissé que par un utilisateur connecté n'ayant pas déjà noté cette auto-école." },
+    { question: 'Que signifie le badge « Vérifié » ?', answer: "Il indique que l'identité et les documents de l'auto-école ont été contrôlés par notre équipe lors de son inscription sur la plateforme." },
+    { question: "Puis-je annuler ou modifier ma demande d'inscription ?", answer: "Votre demande n'est qu'une prise de contact — l'inscription définitive et les conditions d'annulation se font directement avec l'auto-école." },
+];
 
 /* ── Stars ─────────────────────────────────────────────────── */
 function StarRating({ value = 0, interactive = false, onChange }) {
@@ -70,7 +83,7 @@ function BookingForm({ school }) {
         return (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <CheckCircle2 className="w-6 h-6 text-green-600" strokeWidth={2} />
                 </div>
                 <p className="font-semibold text-green-800 mb-1">Demande envoyée !</p>
                 <p className="text-green-700 text-sm">L'auto-école vous contactera bientôt.</p>
@@ -84,7 +97,9 @@ function BookingForm({ school }) {
     return (
         <div className="bg-white rounded-2xl border border-orange-200 p-5">
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center text-sm">📋</span>
+                <span className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                </span>
                 Demande d'inscription
             </h3>
             <form onSubmit={submit} className="space-y-3">
@@ -152,7 +167,23 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
     const [showForm, setShowForm]   = useState(false);
     const [favorited, setFavorited] = useState(isFavorited);
     const [favLoading, setFavLoading] = useState(false);
-    const [lightboxImg, setLightboxImg] = useState(null);
+    const [lightboxIndex, setLightboxIndex] = useState(null);
+    const photos = school.photos ?? [];
+
+    const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+    const showPrev = useCallback(() => setLightboxIndex((i) => (i === null ? i : (i - 1 + photos.length) % photos.length)), [photos.length]);
+    const showNext = useCallback(() => setLightboxIndex((i) => (i === null ? i : (i + 1) % photos.length)), [photos.length]);
+
+    useEffect(() => {
+        if (lightboxIndex === null) return;
+        const onKey = (e) => {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') showPrev();
+            if (e.key === 'ArrowRight') showNext();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [lightboxIndex, closeLightbox, showPrev, showNext]);
 
     const toggleFavorite = () => {
         if (!auth?.user) { router.visit(route('login')); return; }
@@ -202,7 +233,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
             <div className="h-56 sm:h-80 bg-gradient-to-br from-orange-100 to-amber-50 overflow-hidden relative">
                 {school.banner_url
                     ? <img src={`/storage/${school.banner_url}`} alt={school.name} className="w-full h-full object-cover" loading="eager" />
-                    : <div className="w-full h-full flex items-center justify-center text-orange-200 text-8xl">🏫</div>}
+                    : <div className="w-full h-full flex items-center justify-center text-orange-200"><School className="w-24 h-24" strokeWidth={1} /></div>}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
             </div>
 
@@ -223,7 +254,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-200 shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     {school.logo_url
                                         ? <img src={`/storage/${school.logo_url}`} alt="" className="w-full h-full object-cover" />
-                                        : <span className="text-orange-400 text-3xl">🚗</span>}
+                                        : <Car className="w-7 h-7 text-orange-400" strokeWidth={1.5} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -232,26 +263,16 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                                 <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{school.name}</h1>
                                                 {verified && (
                                                     <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
+                                                        <ShieldCheck className="w-3 h-3" />
                                                         Vérifié
                                                     </span>
                                                 )}
                                             </div>
                                             <p className="text-gray-500 text-sm mb-2 flex items-center gap-1">
-                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                                </svg>
+                                                <MapPin className="w-3.5 h-3.5 text-gray-400" />
                                                 {school.address ? `${school.address}, ` : ''}{school.city}
                                             </p>
-                                            <div className="flex items-center gap-2">
-                                                <StarRating value={avgRating} />
-                                                <span className="text-sm font-semibold text-gray-700">
-                                                    {avgRating > 0 ? avgRating.toFixed(1) : '—'}/5
-                                                </span>
-                                                <span className="text-sm text-gray-400">({totalReviews} avis)</span>
-                                            </div>
+                                            <RatingStars rating={avgRating} count={totalReviews} />
                                         </div>
                                         <button onClick={toggleFavorite} disabled={favLoading}
                                             aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
@@ -260,7 +281,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                                     ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
                                                     : 'bg-white border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-600'
                                             }`}>
-                                            <svg className="w-4 h-4" fill={favorited ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                                            <Heart className="w-4 h-4" fill={favorited ? 'currentColor' : 'none'} />
                                             <span className="hidden sm:inline">{favorited ? 'Favori' : 'Ajouter'}</span>
                                         </button>
                                     </div>
@@ -273,13 +294,15 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 {phone && (
                                     <a href={`tel:${phone}`} onClick={() => trackClick(school.id, 'phone')}
                                         className="flex items-center justify-center gap-2 py-3 bg-orange-600 text-white rounded-xl text-sm font-semibold hover:bg-orange-700 transition-colors">
-                                        📞 Appeler
+                                        <Phone className="w-4 h-4" fill="currentColor" />
+                                        Appeler
                                     </a>
                                 )}
                                 {phone && (
                                     <a href={`https://wa.me/212${phone.replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
                                         onClick={() => trackClick(school.id, 'whatsapp')}
                                         className="flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors">
+                                        <MessageCircle className="w-4 h-4" fill="currentColor" />
                                         WhatsApp
                                     </a>
                                 )}
@@ -302,7 +325,8 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 <div className="flex flex-wrap gap-2">
                                     {school.categories.map((cat) => (
                                         <span key={cat.id}
-                                            className="px-5 py-2 bg-orange-50 text-orange-700 rounded-xl font-bold text-sm border border-orange-100 hover:bg-orange-100 transition-colors">
+                                            className="inline-flex items-center gap-1.5 px-5 py-2 bg-orange-50 text-orange-700 rounded-xl font-bold text-sm border border-orange-100 hover:bg-orange-100 transition-colors">
+                                            <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                                             {cat.code}
                                             {cat.name_fr && <span className="font-normal text-orange-500 ml-1">— {cat.name_fr}</span>}
                                         </span>
@@ -336,10 +360,13 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                         {/* Gallery */}
                         {school.photos?.length > 0 && (
                             <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                                <h2 className="font-bold text-gray-900 mb-4">Galerie ({school.photos.length} photos)</h2>
+                                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Images className="w-4 h-4 text-gray-400" />
+                                    Galerie ({school.photos.length} photos)
+                                </h2>
                                 <div className="grid grid-cols-3 gap-2">
                                     {school.photos.slice(0, 6).map((photo, i) => (
-                                        <button key={photo.id} onClick={() => setLightboxImg(`/storage/${photo.path}`)}
+                                        <button key={photo.id} onClick={() => setLightboxIndex(i)}
                                             className="aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity relative group"
                                             aria-label={`Voir photo ${i + 1}`}>
                                             <img src={`/storage/${photo.path}`} alt={photo.caption ?? ''}
@@ -413,6 +440,35 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                     )}
                             </div>
                         </div>
+
+                        {/* Map */}
+                        {school.latitude && school.longitude && (
+                            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                                <h2 className="font-bold text-gray-900 mb-4">Localisation</h2>
+                                <div className="rounded-xl overflow-hidden border border-gray-100 aspect-video">
+                                    <iframe
+                                        title={`Carte — ${school.name}`}
+                                        className="w-full h-full"
+                                        loading="lazy"
+                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${school.longitude - 0.01}%2C${school.latitude - 0.01}%2C${school.longitude + 0.01}%2C${school.latitude + 0.01}&layer=mapnik&marker=${school.latitude}%2C${school.longitude}`}
+                                    />
+                                </div>
+                                <a
+                                    href={`https://www.openstreetmap.org/?mlat=${school.latitude}&mlon=${school.longitude}#map=16/${school.latitude}/${school.longitude}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-sm text-orange-600 hover:underline font-medium mt-3"
+                                >
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Voir en plein écran
+                                </a>
+                            </div>
+                        )}
+
+                        {/* FAQ */}
+                        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                            <h2 className="font-bold text-gray-900 mb-2">Questions fréquentes</h2>
+                            <Accordion items={DETAIL_FAQ} />
+                        </div>
                     </div>
 
                     {/* ── Sidebar ── */}
@@ -423,9 +479,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
 
                             {creditsExhausted ? (
                                 <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-center">
-                                    <svg className="w-8 h-8 text-amber-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-                                    </svg>
+                                    <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" strokeWidth={1.7} />
                                     <p className="text-sm font-semibold text-amber-800 mb-1">Quota de visibilité atteint</p>
                                     <p className="text-xs text-amber-700">Cette auto-école a atteint son quota mensuel. Les coordonnées ne sont temporairement plus disponibles.</p>
                                 </div>
@@ -436,9 +490,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 {phone && (
                                     <a href={`tel:${phone}`} onClick={() => trackClick(school.id, 'phone')}
                                         className="flex items-center justify-center gap-2.5 w-full py-3 bg-orange-600 text-white rounded-xl font-semibold text-sm hover:bg-orange-700 transition-colors shadow-sm">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                                        </svg>
+                                        <Phone className="w-4 h-4" fill="currentColor" />
                                         Appeler — {school.phone}
                                     </a>
                                 )}
@@ -447,10 +499,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                         target="_blank" rel="noopener noreferrer"
                                         onClick={() => trackClick(school.id, 'whatsapp')}
                                         className="flex items-center justify-center gap-2.5 w-full py-3 bg-green-500 text-white rounded-xl font-semibold text-sm hover:bg-green-600 transition-colors">
-                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                                            <path d="M12.004 0C5.374 0 0 5.373 0 12c0 2.117.553 4.104 1.523 5.828L.057 23.8l6.064-1.589A11.948 11.948 0 0012.004 24C18.625 24 24 18.627 24 12S18.625 0 12.004 0zm0 21.818a9.797 9.797 0 01-5.003-1.371l-.357-.213-3.713.973 1.001-3.618-.232-.37A9.833 9.833 0 012.18 12c0-5.422 4.413-9.836 9.824-9.836 5.413 0 9.828 4.414 9.828 9.836 0 5.424-4.415 9.818-9.828 9.818z"/>
-                                        </svg>
+                                        <MessageCircle className="w-4 h-4" fill="currentColor" />
                                         WhatsApp
                                     </a>
                                 )}
@@ -464,9 +513,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 {school.email && (
                                     <a href={`mailto:${school.email}`} onClick={() => trackClick(school.id, 'email')}
                                         className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-orange-600 py-1.5 transition-colors">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                        </svg>
+                                        <Mail className="w-4 h-4 text-gray-400" />
                                         {school.email}
                                     </a>
                                 )}
@@ -474,9 +521,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                     <a href={school.website_url} target="_blank" rel="noopener noreferrer"
                                         onClick={() => trackClick(school.id, 'website')}
                                         className="flex items-center gap-2.5 text-sm text-orange-600 hover:underline py-1.5 transition-colors">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                                        </svg>
+                                        <Globe className="w-4 h-4" />
                                         Site web
                                     </a>
                                 )}
@@ -510,7 +555,7 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
                                 <div className="flex items-center gap-3 mb-4">
                                     <span className="text-4xl font-extrabold text-gray-900">{avgRating.toFixed(1)}</span>
                                     <div>
-                                        <StarRating value={avgRating} />
+                                        <RatingStars rating={avgRating} />
                                         <p className="text-xs text-gray-400 mt-0.5">{totalReviews} avis</p>
                                     </div>
                                 </div>
@@ -537,16 +582,31 @@ export default function DetailPage({ school, ratingBreakdown = {}, canReview = f
             <PublicFooter />
 
             {/* Lightbox */}
-            {lightboxImg && (
+            {lightboxIndex !== null && photos[lightboxIndex] && (
                 <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-                    onClick={() => setLightboxImg(null)}
-                    onKeyDown={(e) => e.key === 'Escape' && setLightboxImg(null)}
+                    onClick={closeLightbox}
                     role="dialog" aria-modal="true" aria-label="Galerie photo"
                     tabIndex={-1}>
-                    <img src={lightboxImg} alt="" className="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl" />
-                    <button className="absolute top-5 right-5 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors"
-                        onClick={(e) => { e.stopPropagation(); setLightboxImg(null); }}
-                        aria-label="Fermer la galerie">✕</button>
+                    <img src={`/storage/${photos[lightboxIndex].path}`} alt={photos[lightboxIndex].caption ?? ''}
+                        className="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl" />
+
+                    <button className="absolute top-5 right-5 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors"
+                        onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+                        aria-label="Fermer la galerie"><X className="w-5 h-5" /></button>
+
+                    {photos.length > 1 && (
+                        <>
+                            <button className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors"
+                                onClick={(e) => { e.stopPropagation(); showPrev(); }}
+                                aria-label="Photo précédente"><ChevronLeft className="w-5 h-5" /></button>
+                            <button className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors"
+                                onClick={(e) => { e.stopPropagation(); showNext(); }}
+                                aria-label="Photo suivante"><ChevronRight className="w-5 h-5" /></button>
+                            <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/70 text-xs font-medium tabular-nums">
+                                {lightboxIndex + 1} / {photos.length}
+                            </span>
+                        </>
+                    )}
                 </div>
             )}
         </>

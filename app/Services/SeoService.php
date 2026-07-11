@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Article;
 use App\Models\AutoSchool;
 
 class SeoService
@@ -170,6 +171,57 @@ class SeoService
             ['label' => 'Accueil',    'href' => '/'],
             ['label' => 'Recherche',  'href' => '/search'],
             ['label' => "Permis {$code}", 'href' => null],
+        ];
+
+        return $seo;
+    }
+
+    public function blogIndex(int $total = 0): array
+    {
+        $title = 'Blog — Conseils permis de conduire et auto-écoles au Maroc | AutoEcoles.ma';
+        $desc  = "Conseils, actualités et guides pratiques pour réussir votre permis de conduire au Maroc. {$total} articles.";
+        $url   = $this->baseUrl . '/blog';
+
+        return $this->build($title, $desc, $url, [
+            $this->schemaBreadcrumb([
+                ['name' => 'Accueil', 'url' => $this->baseUrl],
+                ['name' => 'Blog',    'url' => $url],
+            ]),
+            $this->schemaWebPage($title, $desc, $url),
+        ]);
+    }
+
+    public function article(Article $article): array
+    {
+        $url   = $this->baseUrl . '/blog/' . $article->slug;
+        $title = "{$article->title} | AutoEcoles.ma";
+        $desc  = $article->excerpt
+            ? mb_substr(strip_tags((string) $article->excerpt), 0, 155)
+            : mb_substr(strip_tags((string) $article->content), 0, 155);
+        $image = $article->image_url ?: $this->defaultImage;
+
+        $seo = $this->build($title, $desc, $url, [
+            $this->schemaBreadcrumb([
+                ['name' => 'Accueil', 'url' => $this->baseUrl],
+                ['name' => 'Blog',    'url' => $this->baseUrl . '/blog'],
+                ['name' => $article->title, 'url' => $url],
+            ]),
+            [
+                '@context'      => 'https://schema.org',
+                '@type'         => 'Article',
+                'headline'      => $article->title,
+                'description'   => $desc,
+                'image'         => $image,
+                'datePublished' => optional($article->published_at)->toIso8601String(),
+                'author'        => ['@type' => 'Organization', 'name' => $this->siteName],
+                'publisher'     => ['@type' => 'Organization', 'name' => $this->siteName],
+            ],
+        ], $image, 'article');
+
+        $seo['breadcrumb'] = [
+            ['label' => 'Accueil', 'href' => '/'],
+            ['label' => 'Blog',    'href' => '/blog'],
+            ['label' => $article->title, 'href' => null],
         ];
 
         return $seo;

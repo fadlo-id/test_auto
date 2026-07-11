@@ -31,6 +31,7 @@ export default function PublicFooter() {
                         <ul className="space-y-2.5">
                             {[
                                 { label: 'Rechercher une école',  href: route('search') },
+                                { label: 'Blog',                  href: route('blog.index') },
                                 { label: 'Comment ça marche',     href: route('about') },
                                 { label: 'FAQ',                   href: route('faq') },
                                 { label: 'Contact',               href: route('contact') },
@@ -47,7 +48,7 @@ export default function PublicFooter() {
                         <ul className="space-y-2.5">
                             {[
                                 { label: 'Inscrire mon école',  href: route('school-application.create') },
-                                { label: 'Nos plans',           href: route('about') },
+                                { label: 'Nos plans',           href: route('pricing') },
                                 { label: 'Connexion',           href: route('login') },
                             ].map((l) => (
                                 <li key={l.href}>
