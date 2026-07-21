@@ -1,68 +1,77 @@
 import { Head, Link } from '@inertiajs/react';
+import PublicLayout from '@/Layouts/PublicLayout';
 import Accordion from '@/Components/UI/Accordion';
-
-const FAQS = [
-    {
-        cat: 'Pour les candidats',
-        items: [
-            { question: 'Est-ce que AutoEcoles Maroc est gratuit ?', answer: 'Oui, la recherche, la consultation des profils et la lecture des avis sont entièrement gratuites pour les candidats au permis.' },
-            { question: 'Comment les auto-écoles sont-elles sélectionnées ?', answer: 'Chaque auto-école est vérifiée par notre équipe avant d\'apparaître sur la plateforme. Nous contrôlons l\'existence légale et la conformité aux réglementations en vigueur.' },
-            { question: 'Les avis sont-ils authentiques ?', answer: 'Oui. Chaque avis est modéré par notre équipe avant publication pour s\'assurer qu\'il respecte nos règles de conduite. Nous ne modifions jamais le contenu des avis.' },
-            { question: 'Comment contacter une auto-école ?', answer: 'Sur la page de chaque auto-école, vous trouverez le numéro de téléphone, l\'adresse et un formulaire de contact direct.' },
-        ],
-    },
-    {
-        cat: 'Pour les auto-écoles',
-        items: [
-            { question: 'Comment inscrire mon auto-école sur la plateforme ?', answer: 'Créez un compte avec le rôle "Propriétaire d\'auto-école", complétez votre profil, puis soumettez votre demande. Notre équipe l\'examine sous 48h.' },
-            { question: 'Quels sont les tarifs pour les auto-écoles ?', answer: 'Nous proposons plusieurs formules d\'abonnement adaptées à votre taille. Consultez notre page Tarifs pour plus de détails.' },
-            { question: 'Puis-je répondre aux avis clients ?', answer: 'Cette fonctionnalité est disponible dans les formules premium. Elle vous permet de répondre publiquement aux avis laissés par vos élèves.' },
-            { question: 'Comment améliorer mon classement dans les résultats ?', answer: 'La qualité de votre profil (photos, description, services) et la note moyenne de vos avis sont les principaux critères de classement.' },
-        ],
-    },
-];
+import Reveal from '@/Components/UI/Reveal';
+import { useLocale } from '@/i18n/LocaleContext';
 
 export default function Faq({ content = '' }) {
+    const { t } = useLocale();
+    const FAQS = [
+        {
+            cat: t('pages.faqCatCandidates'),
+            items: [
+                { question: t('pages.faqCand1Q'), answer: t('pages.faqCand1A') },
+                { question: t('pages.faqCand2Q'), answer: t('pages.faqCand2A') },
+                { question: t('pages.faqCand3Q'), answer: t('pages.faqCand3A') },
+                { question: t('pages.faqCand4Q'), answer: t('pages.faqCand4A') },
+            ],
+        },
+        {
+            cat: t('pages.faqCatSchools'),
+            items: [
+                { question: t('pages.faqSchool1Q'), answer: t('pages.faqSchool1A') },
+                { question: t('pages.faqSchool2Q'), answer: t('pages.faqSchool2A') },
+                { question: t('pages.faqSchool3Q'), answer: t('pages.faqSchool3A') },
+                { question: t('pages.faqSchool4Q'), answer: t('pages.faqSchool4A') },
+            ],
+        },
+    ];
+
     return (
         <>
             <Head>
-                <title>FAQ — AutoEcoles Maroc</title>
-                <meta name="description" content="Réponses aux questions fréquentes sur AutoEcoles Maroc." />
+                <title>{t('pages.faqMetaTitle')}</title>
+                <meta name="description" content={t('pages.faqMetaDesc')} />
             </Head>
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white py-16 px-4">
-                    <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-3xl font-bold mb-3">Questions fréquentes</h1>
-                        <p className="text-orange-100">Tout ce que vous devez savoir sur AutoEcoles Maroc</p>
-                    </div>
+
+            <PublicLayout>
+                <div className="relative bg-gradient-to-br from-gray-950 via-red-950 to-gray-900 overflow-hidden py-20 px-4">
+                    <div className="absolute inset-0 bg-mesh-brand pointer-events-none" />
+                    <Reveal className="relative max-w-3xl mx-auto text-center">
+                        <p className="text-red-400 text-xs font-bold uppercase tracking-widest mb-3">{t('pages.faqEyebrow')}</p>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 font-display">{t('pages.faqHeroTitle')}</h1>
+                        <p className="text-gray-300">{t('pages.faqHeroSubtitle')}</p>
+                    </Reveal>
                 </div>
 
-                <div className="max-w-3xl mx-auto px-4 py-16 space-y-12">
-                    {content && (
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-                            <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed"
-                                dangerouslySetInnerHTML={{ __html: content }} />
-                        </div>
-                    )}
-                    {FAQS.map(section => (
-                        <div key={section.cat}>
-                            <h2 className="text-lg font-bold text-gray-900 mb-2">{section.cat}</h2>
-                            <div className="bg-white rounded-2xl border border-gray-100 px-5">
-                                <Accordion items={section.items} />
-                            </div>
-                        </div>
-                    ))}
+                <div className="bg-gray-50">
+                    <div className="max-w-3xl mx-auto px-4 py-16 space-y-12">
+                        {content && (
+                            <Reveal className="card-premium p-8">
+                                <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: content }} />
+                            </Reveal>
+                        )}
+                        {FAQS.map((section, i) => (
+                            <Reveal key={section.cat} delay={i * 80}>
+                                <h2 className="text-lg font-bold text-gray-900 mb-3">{section.cat}</h2>
+                                <div className="card-premium px-5">
+                                    <Accordion items={section.items} />
+                                </div>
+                            </Reveal>
+                        ))}
 
-                    <div className="bg-orange-50 rounded-2xl p-8 text-center border border-orange-100">
-                        <p className="text-gray-900 font-semibold mb-2">Votre question n'est pas listée ?</p>
-                        <p className="text-gray-500 text-sm mb-4">Notre équipe est disponible pour vous répondre</p>
-                        <Link href={route('contact')}
-                            className="inline-block px-6 py-2.5 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700">
-                            Nous contacter
-                        </Link>
+                        <Reveal className="bg-red-50 rounded-3xl p-8 text-center border border-red-100">
+                            <p className="text-gray-900 font-semibold mb-2">{t('pages.faqNotListedTitle')}</p>
+                            <p className="text-gray-500 text-sm mb-4">{t('pages.faqNotListedDesc')}</p>
+                            <Link href={route('contact')}
+                                className="inline-block px-6 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-sm">
+                                {t('pages.faqContactBtn')}
+                            </Link>
+                        </Reveal>
                     </div>
                 </div>
-            </div>
+            </PublicLayout>
         </>
     );
 }

@@ -1,8 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
-import { Check, X, ShieldCheck, TrendingUp, Clock3, CloudCheck } from 'lucide-react';
-import PublicNavbar from '@/Components/PublicNavbar';
-import PublicFooter from '@/Components/PublicFooter';
+import { Check, X, ShieldCheck, TrendingUp, Clock3, CloudCheck, UploadCloud } from 'lucide-react';
+import PublicLayout from '@/Layouts/PublicLayout';
+import Reveal from '@/Components/UI/Reveal';
 
 const BENEFITS = [
     { icon: TrendingUp, title: 'Plus de visibilité', desc: 'Votre fiche apparaît dans les recherches par ville et par catégorie de permis.' },
@@ -97,7 +97,7 @@ function clearDraft() {
 function Field({ label, error, required, children, hint }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 {label}{required && <span className="text-red-500"> *</span>}
             </label>
             {children}
@@ -107,12 +107,12 @@ function Field({ label, error, required, children, hint }) {
     );
 }
 
-const inputClass = 'w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500';
+const inputClass = 'input';
 
 function Checkbox({ checked, onChange, label }) {
     return (
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer py-1">
-            <input type="checkbox" checked={checked} onChange={onChange} className="rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+        <label className={`flex items-center gap-2 text-sm rounded-xl px-2.5 py-2 cursor-pointer transition-colors ${checked ? 'bg-red-50 text-red-800' : 'text-gray-700 hover:bg-gray-50'}`}>
+            <input type="checkbox" checked={checked} onChange={onChange} className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
             {label}
         </label>
     );
@@ -142,15 +142,18 @@ function Dropzone({ label, multiple, files, onFiles, error, max = 10 }) {
 
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
             <div
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-                className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${dragging ? 'border-orange-500 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}
+                className={`border-2 border-dashed rounded-2xl p-7 text-center transition-all ${dragging ? 'border-red-500 bg-red-50 scale-[1.01]' : 'border-gray-200 bg-gray-50'}`}
             >
-                <p className="text-sm text-gray-500 mb-2">Glissez-déposez vos images ici, ou</p>
-                <label className="inline-block px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                <div className="w-11 h-11 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mx-auto mb-3 shadow-sm">
+                    <UploadCloud className="w-5 h-5 text-red-500" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm text-gray-500 mb-3">Glissez-déposez vos images ici, ou</p>
+                <label className="inline-block px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-red-300 hover:text-red-700 cursor-pointer transition-colors shadow-sm">
                     Parcourir
                     <input type="file" accept="image/*" multiple={multiple} className="hidden"
                         onChange={(e) => e.target.files.length && handleFiles(e.target.files)} />
@@ -162,7 +165,7 @@ function Dropzone({ label, multiple, files, onFiles, error, max = 10 }) {
             {previews.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
                     {previews.map((p, i) => (
-                        <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
+                        <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                             <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
                             <button type="button"
                                 onClick={() => {
@@ -170,7 +173,7 @@ function Dropzone({ label, multiple, files, onFiles, error, max = 10 }) {
                                     else onFiles(null);
                                 }}
                                 aria-label="Retirer l'image"
-                                className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                             ><X className="w-3.5 h-3.5" /></button>
                         </div>
                     ))}
@@ -211,6 +214,7 @@ export default function Create({ categories = [] }) {
     }, [data]);
 
     const stepErrors = useMemo(() => Object.keys(errors).length > 0, [errors]);
+    const progressPct = ((step + 1) / STEPS.length) * 100;
 
     const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
     const prev = () => setStep((s) => Math.max(s - 1, 0));
@@ -242,302 +246,308 @@ export default function Create({ categories = [] }) {
                 <title>Ajouter votre auto-école — AutoEcoles Maroc</title>
                 <meta name="description" content="Inscrivez gratuitement votre auto-école sur AutoEcoles.ma." />
             </Head>
-            <div className="min-h-screen bg-gray-50">
-                <PublicNavbar />
-
-                <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white py-14 px-4">
-                    <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-3xl font-bold mb-3">Ajouter votre auto-école</h1>
-                        <p className="text-orange-100 mb-8">Rejoignez AutoEcoles.ma — c'est gratuit et votre candidature sera examinée par notre équipe sous quelques jours.</p>
-                        <div className="grid sm:grid-cols-3 gap-4 text-left">
-                            {BENEFITS.map(({ icon: Icon, title, desc }) => (
-                                <div key={title} className="bg-white/10 border border-white/15 rounded-2xl p-4 backdrop-blur-sm">
-                                    <Icon className="w-5 h-5 text-orange-200 mb-2" strokeWidth={1.75} />
-                                    <p className="font-semibold text-sm mb-1">{title}</p>
-                                    <p className="text-orange-100/90 text-xs leading-relaxed">{desc}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="max-w-3xl mx-auto px-4 py-10">
-                    {/* Progress indicator */}
-                    <div className="mb-8 overflow-x-auto">
-                        <ol className="flex items-center gap-1 min-w-max">
-                            {STEPS.map((label, i) => (
-                                <li key={label} className="flex items-center">
-                                    <button type="button" onClick={() => setStep(i)}
-                                        aria-label={`Étape ${i + 1} : ${label}`}
-                                        aria-current={i === step ? 'step' : undefined}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
-                                            i === step ? 'bg-orange-600 text-white' : i < step ? 'bg-orange-100 text-orange-700' : 'bg-gray-200 text-gray-500'
-                                        }`}>
-                                        {i < step ? <Check className="w-4 h-4" strokeWidth={2.5} /> : i + 1}
-                                    </button>
-                                    {i < STEPS.length - 1 && <div className={`w-6 h-0.5 ${i < step ? 'bg-orange-300' : 'bg-gray-200'}`} />}
-                                </li>
-                            ))}
-                        </ol>
-                        <div className="flex items-center justify-between mt-3">
-                            <p className="text-sm font-semibold text-gray-700">{step + 1}. {STEPS[step]}</p>
-                            <DraftIndicator pulse={savePulse} />
-                        </div>
-                    </div>
-
-                    {stepErrors && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                            Certains champs contiennent des erreurs. Merci de les corriger avant de continuer.
-                        </div>
-                    )}
-
-                    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 space-y-5">
-                        {/* 1. Informations générales */}
-                        {step === 0 && (
-                            <>
-                                <Field label="Nom complet de l'auto-école" required error={errors.school_name}>
-                                    <input className={inputClass} value={data.school_name} onChange={e => setData('school_name', e.target.value)} />
-                                </Field>
-                                <Field label="Nom du propriétaire" required error={errors.owner_name}>
-                                    <input className={inputClass} value={data.owner_name} onChange={e => setData('owner_name', e.target.value)} />
-                                </Field>
-                                <Field label="Date de création" error={errors.founded_at}>
-                                    <input type="date" className={inputClass} value={data.founded_at} onChange={e => setData('founded_at', e.target.value)} />
-                                </Field>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    <Field label="Ville" required error={errors.city}>
-                                        <input className={inputClass} value={data.city} onChange={e => setData('city', e.target.value)} />
-                                    </Field>
-                                    <Field label="Quartier" error={errors.district}>
-                                        <input className={inputClass} value={data.district} onChange={e => setData('district', e.target.value)} />
-                                    </Field>
-                                </div>
-                                <Field label="Adresse complète" required error={errors.address}>
-                                    <textarea rows={2} className={inputClass} value={data.address} onChange={e => setData('address', e.target.value)} />
-                                </Field>
-                                <div className="grid sm:grid-cols-3 gap-4">
-                                    <Field label="Téléphone fixe" error={errors.phone_landline}>
-                                        <input className={inputClass} value={data.phone_landline} onChange={e => setData('phone_landline', e.target.value)} />
-                                    </Field>
-                                    <Field label="GSM" required error={errors.phone_mobile}>
-                                        <input className={inputClass} value={data.phone_mobile} onChange={e => setData('phone_mobile', e.target.value)} />
-                                    </Field>
-                                    <Field label="WhatsApp" error={errors.whatsapp}>
-                                        <input className={inputClass} value={data.whatsapp} onChange={e => setData('whatsapp', e.target.value)} />
-                                    </Field>
-                                </div>
-                                <Field label="Email" required error={errors.email}>
-                                    <input type="email" className={inputClass} value={data.email} onChange={e => setData('email', e.target.value)} />
-                                </Field>
-                            </>
-                        )}
-
-                        {/* 2. Présentation */}
-                        {step === 1 && (
-                            <>
-                                <Field label="Tagline" hint="Une courte phrase qui vous décrit" error={errors.tagline}>
-                                    <input className={inputClass} maxLength={150} value={data.tagline} onChange={e => setData('tagline', e.target.value)} />
-                                </Field>
-                                <Field label="Mot du directeur" error={errors.director_message}>
-                                    <textarea rows={4} className={inputClass} value={data.director_message} onChange={e => setData('director_message', e.target.value)} />
-                                </Field>
-                                <Field label="Description complète" required error={errors.description}>
-                                    <textarea rows={6} className={inputClass} value={data.description} onChange={e => setData('description', e.target.value)} />
-                                </Field>
-                            </>
-                        )}
-
-                        {/* 3. Pédagogie */}
-                        {step === 2 && (
-                            <>
-                                <Field label="Catégories proposées" required error={errors.categories}>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                                        {categories.map((c) => (
-                                            <Checkbox key={c.id} label={c.name_fr}
-                                                checked={data.categories.includes(c.id)}
-                                                onChange={() => setData('categories', toggleInArray(data.categories, c.id))} />
-                                        ))}
-                                    </div>
-                                </Field>
-                                <Field label="Langues parlées" error={errors.languages}>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                                        {LANGUAGES.map((lang) => (
-                                            <Checkbox key={lang} label={lang}
-                                                checked={data.languages.includes(lang)}
-                                                onChange={() => setData('languages', toggleInArray(data.languages, lang))} />
-                                        ))}
-                                    </div>
-                                </Field>
-                                <Field label="Moniteur / Monitrice" error={errors.instructor_genders}>
-                                    <div className="flex gap-4">
-                                        <Checkbox label="Moniteur (homme)"
-                                            checked={data.instructor_genders.includes('male')}
-                                            onChange={() => setData('instructor_genders', toggleInArray(data.instructor_genders, 'male'))} />
-                                        <Checkbox label="Monitrice (femme)"
-                                            checked={data.instructor_genders.includes('female')}
-                                            onChange={() => setData('instructor_genders', toggleInArray(data.instructor_genders, 'female'))} />
-                                    </div>
-                                </Field>
-                            </>
-                        )}
-
-                        {/* 4. Horaires */}
-                        {step === 3 && (
-                            <div className="space-y-2">
-                                {DAYS.map(([key, label]) => (
-                                    <div key={key} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                                        <span className="w-24 text-sm font-medium text-gray-700 shrink-0">{label}</span>
-                                        <input type="time" disabled={data.opening_hours[key].closed}
-                                            value={data.opening_hours[key].open ?? ''}
-                                            onChange={e => setHour(key, 'open', e.target.value)}
-                                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm disabled:bg-gray-100 disabled:text-gray-400" />
-                                        <span className="text-gray-400 text-sm">à</span>
-                                        <input type="time" disabled={data.opening_hours[key].closed}
-                                            value={data.opening_hours[key].close ?? ''}
-                                            onChange={e => setHour(key, 'close', e.target.value)}
-                                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm disabled:bg-gray-100 disabled:text-gray-400" />
-                                        <label className="flex items-center gap-1.5 text-sm text-gray-500 ml-auto cursor-pointer">
-                                            <input type="checkbox" checked={data.opening_hours[key].closed}
-                                                onChange={e => setHour(key, 'closed', e.target.checked)}
-                                                className="rounded border-gray-300 text-orange-600" />
-                                            Fermé
-                                        </label>
+            <PublicLayout>
+                <div className="min-h-screen bg-gray-50">
+                    <div className="relative bg-gradient-to-br from-gray-950 via-red-950 to-gray-900 overflow-hidden py-20 px-4">
+                        <div className="absolute inset-0 bg-mesh-brand pointer-events-none" />
+                        <Reveal className="relative max-w-3xl mx-auto text-center">
+                            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 font-display">Ajouter votre auto-école</h1>
+                            <p className="text-gray-300 mb-8">Rejoignez AutoEcoles.ma — c'est gratuit et votre candidature sera examinée par notre équipe sous quelques jours.</p>
+                            <div className="grid sm:grid-cols-3 gap-4 text-left">
+                                {BENEFITS.map(({ icon: Icon, title, desc }) => (
+                                    <div key={title} className="glass-panel rounded-2xl p-4">
+                                        <Icon className="w-5 h-5 text-red-300 mb-2" strokeWidth={1.75} />
+                                        <p className="font-semibold text-sm text-white mb-1">{title}</p>
+                                        <p className="text-gray-300 text-xs leading-relaxed">{desc}</p>
                                     </div>
                                 ))}
-                                {errors.opening_hours && <p className="text-xs text-red-500 mt-1">{errors.opening_hours}</p>}
+                            </div>
+                        </Reveal>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto px-4 py-10">
+                        {/* Progress indicator */}
+                        <div className="mb-8">
+                            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-5">
+                                <div className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPct}%` }} />
+                            </div>
+                            <div className="overflow-x-auto pb-1">
+                                <ol className="flex items-center gap-1 min-w-max">
+                                    {STEPS.map((label, i) => (
+                                        <li key={label} className="flex items-center">
+                                            <button type="button" onClick={() => setStep(i)}
+                                                aria-label={`Étape ${i + 1} : ${label}`}
+                                                aria-current={i === step ? 'step' : undefined}
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-all duration-300 ${
+                                                    i === step ? 'bg-red-600 text-white shadow-glow scale-110' : i < step ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'
+                                                }`}>
+                                                {i < step ? <Check className="w-4 h-4" strokeWidth={2.5} /> : i + 1}
+                                            </button>
+                                            {i < STEPS.length - 1 && <div className={`w-6 h-0.5 transition-colors duration-300 ${i < step ? 'bg-red-300' : 'bg-gray-200'}`} />}
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                            <div className="flex items-center justify-between mt-3">
+                                <p className="text-sm font-semibold text-gray-700">{step + 1}. {STEPS[step]}</p>
+                                <DraftIndicator pulse={savePulse} />
+                            </div>
+                        </div>
+
+                        {stepErrors && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
+                                Certains champs contiennent des erreurs. Merci de les corriger avant de continuer.
                             </div>
                         )}
 
-                        {/* 5. Présence en ligne */}
-                        {step === 4 && (
-                            <>
-                                <Field label="Facebook" error={errors.facebook_url}>
-                                    <input className={inputClass} placeholder="https://facebook.com/..." value={data.facebook_url} onChange={e => setData('facebook_url', e.target.value)} />
-                                </Field>
-                                <Field label="Instagram" error={errors.instagram_url}>
-                                    <input className={inputClass} placeholder="https://instagram.com/..." value={data.instagram_url} onChange={e => setData('instagram_url', e.target.value)} />
-                                </Field>
-                                <Field label="TikTok" error={errors.tiktok_url}>
-                                    <input className={inputClass} placeholder="https://tiktok.com/@..." value={data.tiktok_url} onChange={e => setData('tiktok_url', e.target.value)} />
-                                </Field>
-                                <Field label="Site web" error={errors.website_url}>
-                                    <input className={inputClass} placeholder="https://..." value={data.website_url} onChange={e => setData('website_url', e.target.value)} />
-                                </Field>
-                                <Field label="Google Maps" error={errors.google_maps_url}>
-                                    <input className={inputClass} placeholder="https://maps.google.com/..." value={data.google_maps_url} onChange={e => setData('google_maps_url', e.target.value)} />
-                                </Field>
-                            </>
-                        )}
-
-                        {/* 6. Chiffres clés */}
-                        {step === 5 && (
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                <Field label="Ancienneté (années)" error={errors.years_experience}>
-                                    <input type="number" min={0} className={inputClass} value={data.years_experience} onChange={e => setData('years_experience', e.target.value)} />
-                                </Field>
-                                <Field label="Nombre total de candidats" error={errors.total_students}>
-                                    <input type="number" min={0} className={inputClass} value={data.total_students} onChange={e => setData('total_students', e.target.value)} />
-                                </Field>
-                                <Field label="Nombre moyen par mois" error={errors.avg_students_per_month}>
-                                    <input type="number" min={0} className={inputClass} value={data.avg_students_per_month} onChange={e => setData('avg_students_per_month', e.target.value)} />
-                                </Field>
-                                <Field label="Taux de réussite (%)" error={errors.success_rate}>
-                                    <input type="number" min={0} max={100} className={inputClass} value={data.success_rate} onChange={e => setData('success_rate', e.target.value)} />
-                                </Field>
-                                <Field label="Personnel" error={errors.staff_count}>
-                                    <input type="number" min={0} className={inputClass} value={data.staff_count} onChange={e => setData('staff_count', e.target.value)} />
-                                </Field>
-                                <Field label="Véhicules pédagogiques" error={errors.vehicles_count}>
-                                    <input type="number" min={0} className={inputClass} value={data.vehicles_count} onChange={e => setData('vehicles_count', e.target.value)} />
-                                </Field>
-                            </div>
-                        )}
-
-                        {/* 7. Médias */}
-                        {step === 6 && (
-                            <div className="space-y-6">
-                                <Dropzone label="Logo" files={data.logo} onFiles={(f) => setData('logo', f)} error={errors.logo} />
-                                <Dropzone label="Galerie de véhicules / locaux" multiple files={data.gallery} onFiles={(f) => setData('gallery', f)} error={errors['gallery'] || errors['gallery.0']} />
-                            </div>
-                        )}
-
-                        {/* 8. Services spéciaux */}
-                        {step === 7 && (
-                            <>
-                                <Field label="Services spéciaux" error={errors.special_services}>
-                                    <div className="grid sm:grid-cols-2 gap-1">
-                                        {SPECIAL_SERVICES.map((svc) => (
-                                            <Checkbox key={svc} label={svc}
-                                                checked={data.special_services.includes(svc)}
-                                                onChange={() => setData('special_services', toggleInArray(data.special_services, svc))} />
-                                        ))}
-                                    </div>
-                                </Field>
-                                <Field label="Autre" error={errors.special_services_other}>
-                                    <input className={inputClass} value={data.special_services_other} onChange={e => setData('special_services_other', e.target.value)} />
-                                </Field>
-                            </>
-                        )}
-
-                        {/* 9. Autres projets */}
-                        {step === 8 && (
-                            <div className="space-y-4">
-                                {data.projects.map((p, i) => (
-                                    <div key={i} className="flex items-start justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-800">{p.title}{p.year ? ` (${p.year})` : ''}</p>
-                                            {p.description && <p className="text-xs text-gray-500 mt-0.5">{p.description}</p>}
-                                        </div>
-                                        <button type="button" onClick={() => removeProject(i)} aria-label="Retirer" className="text-red-400 hover:text-red-600 shrink-0"><X className="w-4 h-4" /></button>
-                                    </div>
-                                ))}
-
-                                <div className="p-4 border border-dashed border-gray-300 rounded-xl space-y-3">
-                                    <Field label="Titre du projet">
-                                        <input className={inputClass} value={projectDraft.title} onChange={e => setProjectDraft(p => ({ ...p, title: e.target.value }))} />
-                                    </Field>
-                                    <div className="grid sm:grid-cols-3 gap-3">
-                                        <div className="sm:col-span-2">
-                                            <Field label="Description">
-                                                <input className={inputClass} value={projectDraft.description} onChange={e => setProjectDraft(p => ({ ...p, description: e.target.value }))} />
+                        <form onSubmit={submit} className="card-premium p-6 sm:p-8">
+                            <div key={step} className="space-y-5 animate-in">
+                                {/* 1. Informations générales */}
+                                {step === 0 && (
+                                    <>
+                                        <Field label="Nom complet de l'auto-école" required error={errors.school_name}>
+                                            <input className={inputClass} value={data.school_name} onChange={e => setData('school_name', e.target.value)} />
+                                        </Field>
+                                        <Field label="Nom du propriétaire" required error={errors.owner_name}>
+                                            <input className={inputClass} value={data.owner_name} onChange={e => setData('owner_name', e.target.value)} />
+                                        </Field>
+                                        <Field label="Date de création" error={errors.founded_at}>
+                                            <input type="date" className={inputClass} value={data.founded_at} onChange={e => setData('founded_at', e.target.value)} />
+                                        </Field>
+                                        <div className="grid sm:grid-cols-2 gap-4">
+                                            <Field label="Ville" required error={errors.city}>
+                                                <input className={inputClass} value={data.city} onChange={e => setData('city', e.target.value)} />
+                                            </Field>
+                                            <Field label="Quartier" error={errors.district}>
+                                                <input className={inputClass} value={data.district} onChange={e => setData('district', e.target.value)} />
                                             </Field>
                                         </div>
-                                        <Field label="Année">
-                                            <input type="number" className={inputClass} value={projectDraft.year} onChange={e => setProjectDraft(p => ({ ...p, year: e.target.value }))} />
+                                        <Field label="Adresse complète" required error={errors.address}>
+                                            <textarea rows={2} className={inputClass} value={data.address} onChange={e => setData('address', e.target.value)} />
+                                        </Field>
+                                        <div className="grid sm:grid-cols-3 gap-4">
+                                            <Field label="Téléphone fixe" error={errors.phone_landline}>
+                                                <input className={inputClass} value={data.phone_landline} onChange={e => setData('phone_landline', e.target.value)} />
+                                            </Field>
+                                            <Field label="GSM" required error={errors.phone_mobile}>
+                                                <input className={inputClass} value={data.phone_mobile} onChange={e => setData('phone_mobile', e.target.value)} />
+                                            </Field>
+                                            <Field label="WhatsApp" error={errors.whatsapp}>
+                                                <input className={inputClass} value={data.whatsapp} onChange={e => setData('whatsapp', e.target.value)} />
+                                            </Field>
+                                        </div>
+                                        <Field label="Email" required error={errors.email}>
+                                            <input type="email" className={inputClass} value={data.email} onChange={e => setData('email', e.target.value)} />
+                                        </Field>
+                                    </>
+                                )}
+
+                                {/* 2. Présentation */}
+                                {step === 1 && (
+                                    <>
+                                        <Field label="Tagline" hint="Une courte phrase qui vous décrit" error={errors.tagline}>
+                                            <input className={inputClass} maxLength={150} value={data.tagline} onChange={e => setData('tagline', e.target.value)} />
+                                        </Field>
+                                        <Field label="Mot du directeur" error={errors.director_message}>
+                                            <textarea rows={4} className={inputClass} value={data.director_message} onChange={e => setData('director_message', e.target.value)} />
+                                        </Field>
+                                        <Field label="Description complète" required error={errors.description}>
+                                            <textarea rows={6} className={inputClass} value={data.description} onChange={e => setData('description', e.target.value)} />
+                                        </Field>
+                                    </>
+                                )}
+
+                                {/* 3. Pédagogie */}
+                                {step === 2 && (
+                                    <>
+                                        <Field label="Catégories proposées" required error={errors.categories}>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+                                                {categories.map((c) => (
+                                                    <Checkbox key={c.id} label={c.name_fr}
+                                                        checked={data.categories.includes(c.id)}
+                                                        onChange={() => setData('categories', toggleInArray(data.categories, c.id))} />
+                                                ))}
+                                            </div>
+                                        </Field>
+                                        <Field label="Langues parlées" error={errors.languages}>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+                                                {LANGUAGES.map((lang) => (
+                                                    <Checkbox key={lang} label={lang}
+                                                        checked={data.languages.includes(lang)}
+                                                        onChange={() => setData('languages', toggleInArray(data.languages, lang))} />
+                                                ))}
+                                            </div>
+                                        </Field>
+                                        <Field label="Moniteur / Monitrice" error={errors.instructor_genders}>
+                                            <div className="flex gap-4">
+                                                <Checkbox label="Moniteur (homme)"
+                                                    checked={data.instructor_genders.includes('male')}
+                                                    onChange={() => setData('instructor_genders', toggleInArray(data.instructor_genders, 'male'))} />
+                                                <Checkbox label="Monitrice (femme)"
+                                                    checked={data.instructor_genders.includes('female')}
+                                                    onChange={() => setData('instructor_genders', toggleInArray(data.instructor_genders, 'female'))} />
+                                            </div>
+                                        </Field>
+                                    </>
+                                )}
+
+                                {/* 4. Horaires */}
+                                {step === 3 && (
+                                    <div className="space-y-1">
+                                        {DAYS.map(([key, label]) => (
+                                            <div key={key} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">
+                                                <span className="w-24 text-sm font-medium text-gray-700 shrink-0">{label}</span>
+                                                <input type="time" disabled={data.opening_hours[key].closed}
+                                                    value={data.opening_hours[key].open ?? ''}
+                                                    onChange={e => setHour(key, 'open', e.target.value)}
+                                                    className="border border-gray-200 rounded-xl px-2.5 py-1.5 text-sm disabled:bg-gray-50 disabled:text-gray-400" />
+                                                <span className="text-gray-400 text-sm">à</span>
+                                                <input type="time" disabled={data.opening_hours[key].closed}
+                                                    value={data.opening_hours[key].close ?? ''}
+                                                    onChange={e => setHour(key, 'close', e.target.value)}
+                                                    className="border border-gray-200 rounded-xl px-2.5 py-1.5 text-sm disabled:bg-gray-50 disabled:text-gray-400" />
+                                                <label className="flex items-center gap-1.5 text-sm text-gray-500 ml-auto cursor-pointer">
+                                                    <input type="checkbox" checked={data.opening_hours[key].closed}
+                                                        onChange={e => setHour(key, 'closed', e.target.checked)}
+                                                        className="rounded border-gray-300 text-red-600" />
+                                                    Fermé
+                                                </label>
+                                            </div>
+                                        ))}
+                                        {errors.opening_hours && <p className="text-xs text-red-500 mt-1">{errors.opening_hours}</p>}
+                                    </div>
+                                )}
+
+                                {/* 5. Présence en ligne */}
+                                {step === 4 && (
+                                    <>
+                                        <Field label="Facebook" error={errors.facebook_url}>
+                                            <input className={inputClass} placeholder="https://facebook.com/..." value={data.facebook_url} onChange={e => setData('facebook_url', e.target.value)} />
+                                        </Field>
+                                        <Field label="Instagram" error={errors.instagram_url}>
+                                            <input className={inputClass} placeholder="https://instagram.com/..." value={data.instagram_url} onChange={e => setData('instagram_url', e.target.value)} />
+                                        </Field>
+                                        <Field label="TikTok" error={errors.tiktok_url}>
+                                            <input className={inputClass} placeholder="https://tiktok.com/@..." value={data.tiktok_url} onChange={e => setData('tiktok_url', e.target.value)} />
+                                        </Field>
+                                        <Field label="Site web" error={errors.website_url}>
+                                            <input className={inputClass} placeholder="https://..." value={data.website_url} onChange={e => setData('website_url', e.target.value)} />
+                                        </Field>
+                                        <Field label="Google Maps" error={errors.google_maps_url}>
+                                            <input className={inputClass} placeholder="https://maps.google.com/..." value={data.google_maps_url} onChange={e => setData('google_maps_url', e.target.value)} />
+                                        </Field>
+                                    </>
+                                )}
+
+                                {/* 6. Chiffres clés */}
+                                {step === 5 && (
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <Field label="Ancienneté (années)" error={errors.years_experience}>
+                                            <input type="number" min={0} className={inputClass} value={data.years_experience} onChange={e => setData('years_experience', e.target.value)} />
+                                        </Field>
+                                        <Field label="Nombre total de candidats" error={errors.total_students}>
+                                            <input type="number" min={0} className={inputClass} value={data.total_students} onChange={e => setData('total_students', e.target.value)} />
+                                        </Field>
+                                        <Field label="Nombre moyen par mois" error={errors.avg_students_per_month}>
+                                            <input type="number" min={0} className={inputClass} value={data.avg_students_per_month} onChange={e => setData('avg_students_per_month', e.target.value)} />
+                                        </Field>
+                                        <Field label="Taux de réussite (%)" error={errors.success_rate}>
+                                            <input type="number" min={0} max={100} className={inputClass} value={data.success_rate} onChange={e => setData('success_rate', e.target.value)} />
+                                        </Field>
+                                        <Field label="Personnel" error={errors.staff_count}>
+                                            <input type="number" min={0} className={inputClass} value={data.staff_count} onChange={e => setData('staff_count', e.target.value)} />
+                                        </Field>
+                                        <Field label="Véhicules pédagogiques" error={errors.vehicles_count}>
+                                            <input type="number" min={0} className={inputClass} value={data.vehicles_count} onChange={e => setData('vehicles_count', e.target.value)} />
                                         </Field>
                                     </div>
-                                    <button type="button" onClick={addProject}
-                                        className="text-sm font-medium text-orange-600 hover:text-orange-700">
-                                        + Ajouter ce projet
-                                    </button>
-                                </div>
+                                )}
+
+                                {/* 7. Médias */}
+                                {step === 6 && (
+                                    <div className="space-y-6">
+                                        <Dropzone label="Logo" files={data.logo} onFiles={(f) => setData('logo', f)} error={errors.logo} />
+                                        <Dropzone label="Galerie de véhicules / locaux" multiple files={data.gallery} onFiles={(f) => setData('gallery', f)} error={errors['gallery'] || errors['gallery.0']} />
+                                    </div>
+                                )}
+
+                                {/* 8. Services spéciaux */}
+                                {step === 7 && (
+                                    <>
+                                        <Field label="Services spéciaux" error={errors.special_services}>
+                                            <div className="grid sm:grid-cols-2 gap-1">
+                                                {SPECIAL_SERVICES.map((svc) => (
+                                                    <Checkbox key={svc} label={svc}
+                                                        checked={data.special_services.includes(svc)}
+                                                        onChange={() => setData('special_services', toggleInArray(data.special_services, svc))} />
+                                                ))}
+                                            </div>
+                                        </Field>
+                                        <Field label="Autre" error={errors.special_services_other}>
+                                            <input className={inputClass} value={data.special_services_other} onChange={e => setData('special_services_other', e.target.value)} />
+                                        </Field>
+                                    </>
+                                )}
+
+                                {/* 9. Autres projets */}
+                                {step === 8 && (
+                                    <div className="space-y-4">
+                                        {data.projects.map((p, i) => (
+                                            <div key={i} className="flex items-start justify-between gap-3 p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-800">{p.title}{p.year ? ` (${p.year})` : ''}</p>
+                                                    {p.description && <p className="text-xs text-gray-500 mt-0.5">{p.description}</p>}
+                                                </div>
+                                                <button type="button" onClick={() => removeProject(i)} aria-label="Retirer" className="text-red-400 hover:text-red-600 shrink-0"><X className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+
+                                        <div className="p-5 border-2 border-dashed border-gray-200 rounded-2xl space-y-3 bg-gray-50/50">
+                                            <Field label="Titre du projet">
+                                                <input className={inputClass} value={projectDraft.title} onChange={e => setProjectDraft(p => ({ ...p, title: e.target.value }))} />
+                                            </Field>
+                                            <div className="grid sm:grid-cols-3 gap-3">
+                                                <div className="sm:col-span-2">
+                                                    <Field label="Description">
+                                                        <input className={inputClass} value={projectDraft.description} onChange={e => setProjectDraft(p => ({ ...p, description: e.target.value }))} />
+                                                    </Field>
+                                                </div>
+                                                <Field label="Année">
+                                                    <input type="number" className={inputClass} value={projectDraft.year} onChange={e => setProjectDraft(p => ({ ...p, year: e.target.value }))} />
+                                                </Field>
+                                            </div>
+                                            <button type="button" onClick={addProject}
+                                                className="text-sm font-semibold text-red-600 hover:text-red-700">
+                                                + Ajouter ce projet
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
 
-                        {/* Navigation */}
-                        <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                            <button type="button" onClick={prev} disabled={step === 0}
-                                className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
-                                ← Précédent
-                            </button>
+                            {/* Navigation */}
+                            <div className="flex items-center justify-between pt-6 mt-6 border-t border-gray-100">
+                                <button type="button" onClick={prev} disabled={step === 0}
+                                    className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                    ← Précédent
+                                </button>
 
-                            {step < STEPS.length - 1 ? (
-                                <button type="button" onClick={next}
-                                    className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 text-white hover:bg-orange-700">
-                                    Suivant →
-                                </button>
-                            ) : (
-                                <button type="submit" disabled={processing}
-                                    className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50">
-                                    {processing ? 'Envoi en cours…' : 'Envoyer ma candidature'}
-                                </button>
-                            )}
-                        </div>
-                    </form>
+                                {step < STEPS.length - 1 ? (
+                                    <button type="button" onClick={next}
+                                        className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm hover:shadow-glow">
+                                        Suivant →
+                                    </button>
+                                ) : (
+                                    <button type="submit" disabled={processing}
+                                        className="btn-shine px-6 py-2.5 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-glow">
+                                        {processing ? 'Envoi en cours…' : 'Envoyer ma candidature'}
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
                 </div>
-
-                <PublicFooter />
-            </div>
+            </PublicLayout>
         </>
     );
 }

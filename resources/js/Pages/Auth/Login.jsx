@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
-import Checkbox from '@/Components/Checkbox';
 import GuestLayout from '@/Layouts/GuestLayout';
 import GoogleSignInButton from '@/Components/GoogleSignInButton';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import AuthField from '@/Components/UI/AuthField';
+import AuthButton from '@/Components/UI/AuthButton';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Mail, Lock } from 'lucide-react';
+import { useLocale } from '@/i18n/LocaleContext';
 
 export default function Login({ status, canResetPassword }) {
     const { flash } = usePage().props;
+    const { t } = useLocale();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -30,97 +30,78 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title="Connexion" />
+            <Head title={t('auth.welcomeBack')} />
 
-            <div className="mb-6 text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-                <p className="mt-1 text-sm text-gray-500">
-                    Accédez à votre espace auto-école
-                </p>
+            <div className="mb-7 text-center">
+                <h1 className="text-2xl font-extrabold text-gray-900 font-display">{t('auth.welcomeBack')}</h1>
+                <p className="mt-1.5 text-sm text-gray-500">{t('auth.loginSubtitle')}</p>
             </div>
 
             {status && (
-                <div className="mb-4 p-3 rounded-lg bg-green-50 text-sm text-green-700 border border-green-200">
+                <div className="mb-5 p-3 rounded-xl bg-emerald-50 text-sm text-emerald-700 border border-emerald-200">
                     {status}
                 </div>
             )}
 
             {flash?.error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-50 text-sm text-red-700 border border-red-200">
+                <div className="mb-5 p-3 rounded-xl bg-red-50 text-sm text-red-700 border border-red-200">
                     {flash.error}
                 </div>
             )}
 
-            <div className="mb-4">
+            <div className="mb-5">
                 <GoogleSignInButton />
-                <div className="flex items-center gap-3 my-4">
+                <div className="flex items-center gap-3 my-5">
                     <div className="flex-1 h-px bg-gray-200" />
-                    <span className="text-xs text-gray-400">ou par email</span>
+                    <span className="text-xs text-gray-400 font-medium">{t('auth.orByEmail')}</span>
                     <div className="flex-1 h-px bg-gray-200" />
                 </div>
             </div>
 
-            <form onSubmit={submit} className="space-y-4">
-                <div>
-                    <InputLabel htmlFor="email" value="Adresse email" />
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                        placeholder="votre@email.com"
-                    />
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
+            <form onSubmit={submit} className="space-y-5">
+                <AuthField
+                    id="email" type="email" icon={Mail}
+                    label={t('auth.email')}
+                    value={data.email}
+                    autoComplete="username"
+                    isFocused
+                    placeholder={t('auth.emailPlaceholder')}
+                    onChange={(e) => setData('email', e.target.value)}
+                    error={errors.email}
+                />
 
-                <div>
-                    <div className="flex items-center justify-between">
-                        <InputLabel htmlFor="password" value="Mot de passe" />
-                        {canResetPassword && (
-                            <Link
-                                href={route('password.request')}
-                                className="text-sm text-orange-600 hover:text-orange-700"
-                            >
-                                Mot de passe oublié ?
-                            </Link>
-                        )}
-                    </div>
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
+                <AuthField
+                    id="password" type="password" icon={Lock}
+                    label={t('auth.password')}
+                    value={data.password}
+                    autoComplete="current-password"
+                    onChange={(e) => setData('password', e.target.value)}
+                    error={errors.password}
+                    labelRight={canResetPassword && (
+                        <Link href={route('password.request')} className="text-sm font-medium text-red-600 hover:text-red-700">
+                            {t('auth.forgotPassword')}
+                        </Link>
+                    )}
+                />
 
-                <div className="flex items-center">
-                    <Checkbox
-                        name="remember"
+                <label className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer select-none">
+                    <input
+                        type="checkbox"
                         checked={data.remember}
                         onChange={(e) => setData('remember', e.target.checked)}
+                        className="w-4 h-4 rounded-md border-gray-300 text-red-600 focus:ring-red-500 focus:ring-offset-0 transition-colors"
                     />
-                    <span className="ms-2 text-sm text-gray-600">Se souvenir de moi</span>
-                </div>
+                    {t('auth.rememberMe')}
+                </label>
 
-                <PrimaryButton
-                    className="w-full justify-center bg-orange-600 hover:bg-orange-700"
-                    disabled={processing}
-                >
-                    {processing ? 'Connexion...' : 'Se connecter'}
-                </PrimaryButton>
+                <AuthButton type="submit" processing={processing}>
+                    {processing ? t('auth.loggingIn') : t('auth.logIn')}
+                </AuthButton>
 
                 <p className="text-center text-sm text-gray-500">
-                    Pas encore de compte ?{' '}
-                    <Link href={route('register')} className="text-orange-600 hover:text-orange-700 font-medium">
-                        Créer un compte
+                    {t('auth.noAccount')}{' '}
+                    <Link href={route('register')} className="text-red-600 hover:text-red-700 font-semibold">
+                        {t('auth.createAccount')}
                     </Link>
                 </p>
             </form>

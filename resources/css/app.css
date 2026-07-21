@@ -193,3 +193,69 @@
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type=number] { -moz-appearance: textfield; }
 }
+
+/* ── Public site design system ─────────────────────────────────
+   Light-only (red / white / very-light-gray, warm cream accents) —
+   used by the public marketing pages (Home, Search, Detail, Blog,
+   static pages, school application). Matches the autoecoles.ma
+   reference palette. Dashboards are untouched and keep using the
+   tokens/components above. ─────────────────────────────────────── */
+@layer components {
+  .container-page {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply inline-block text-red-600 text-xs font-bold uppercase tracking-widest mb-2;
+  }
+
+  /* Premium card used across public listings/sections */
+  .card-premium {
+    @apply bg-white rounded-3xl border border-gray-100 shadow-premium transition-all duration-300;
+  }
+  .card-premium-hover {
+    @apply hover:-translate-y-1 hover:shadow-elevated hover:border-red-100;
+  }
+
+  /* Restrained glassmorphism — Hero / Search / CTA only */
+  .glass-panel {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+  .glass-panel-light {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60;
+  }
+
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-red-600 via-red-500 to-amber-400 bg-clip-text text-transparent;
+  }
+
+  .bg-mesh-brand {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(220, 38, 38, 0.25), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 30%, rgba(248, 113, 113, 0.15), transparent 60%);
+  }
+
+  .badge-trust {
+    @apply inline-flex items-center gap-1.5 bg-white/10 border border-white/15 text-white/90 text-xs font-medium px-3 py-1.5 rounded-full backdrop-blur-sm;
+  }
+
+  /* Premium diagonal shine sweep — apply to primary CTAs only, sparingly */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 -60%;
+    width: 40%;
+    background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .btn-shine:hover::after {
+    left: 130%;
+  }
+}

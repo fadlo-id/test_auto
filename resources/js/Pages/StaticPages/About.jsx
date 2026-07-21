@@ -1,5 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Car, CheckCircle2, Eye, Users } from 'lucide-react';
+import PublicLayout from '@/Layouts/PublicLayout';
+import Reveal from '@/Components/UI/Reveal';
+import { useLocale } from '@/i18n/LocaleContext';
 
 function CmsContent({ html }) {
     if (!html) return null;
@@ -12,92 +15,93 @@ function CmsContent({ html }) {
 }
 
 export default function About({ content = '' }) {
+    const { t } = useLocale();
+    const VALUES = [
+        { icon: CheckCircle2, color: 'bg-green-50 text-green-600', title: t('pages.aboutValue1Title'), desc: t('pages.aboutValue1Desc') },
+        { icon: Eye, color: 'bg-red-50 text-red-600', title: t('pages.aboutValue2Title'), desc: t('pages.aboutValue2Desc') },
+        { icon: Users, color: 'bg-blue-50 text-blue-600', title: t('pages.aboutValue3Title'), desc: t('pages.aboutValue3Desc') },
+    ];
+
     return (
         <>
             <Head>
-                <title>À propos — AutoEcoles Maroc</title>
-                <meta name="description" content="Découvrez AutoEcoles Maroc, la plateforme de référence pour trouver et comparer les auto-écoles au Maroc." />
+                <title>{t('pages.aboutMetaTitle')}</title>
+                <meta name="description" content={t('pages.aboutMetaDesc')} />
             </Head>
-            <div className="min-h-screen bg-gray-50">
+
+            <PublicLayout>
                 {/* Hero */}
-                <div className="bg-gradient-to-br from-orange-600 to-orange-700 text-white py-20 px-4">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h1 className="text-4xl font-bold mb-4">À propos d'AutoEcoles Maroc</h1>
-                        <p className="text-xl text-orange-100">La plateforme qui connecte les candidats au permis avec les meilleures auto-écoles du Maroc</p>
-                    </div>
+                <div className="relative bg-gradient-to-br from-gray-950 via-red-950 to-gray-900 overflow-hidden py-24 px-4">
+                    <div className="absolute inset-0 bg-mesh-brand pointer-events-none" />
+                    <Reveal className="relative max-w-3xl mx-auto text-center">
+                        <p className="text-red-400 text-xs font-bold uppercase tracking-widest mb-3">{t('pages.aboutEyebrow')}</p>
+                        <h1 className="text-3xl sm:text-5xl font-extrabold text-white mb-4 font-display">{t('pages.aboutHeroTitle')}</h1>
+                        <p className="text-xl text-gray-300">{t('pages.aboutHeroSubtitle')}</p>
+                    </Reveal>
                 </div>
 
-                <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
-                    {/* CMS content — if set in admin settings, shown before static sections */}
-                    {content && (
-                        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-                            <CmsContent html={content} />
-                        </section>
-                    )}
+                <div className="bg-gray-50">
+                    <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
+                        {content && (
+                            <Reveal className="card-premium p-8">
+                                <CmsContent html={content} />
+                            </Reveal>
+                        )}
 
-                    {/* Mission */}
-                    <section className="grid md:grid-cols-2 gap-8 items-center">
+                        {/* Mission */}
+                        <Reveal className="grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <p className="eyebrow">{t('pages.aboutMissionEyebrow')}</p>
+                                <h2 className="text-2xl font-extrabold text-gray-900 mb-4 font-display">{t('pages.aboutMissionTitle')}</h2>
+                                <p className="text-gray-600 leading-relaxed mb-4">
+                                    {t('pages.aboutMissionP1')}
+                                </p>
+                                <p className="text-gray-600 leading-relaxed">
+                                    {t('pages.aboutMissionP2')}
+                                </p>
+                            </div>
+                            <div className="card-premium p-8 text-center">
+                                <Car className="w-12 h-12 text-red-300 mx-auto mb-3" strokeWidth={1.25} />
+                                <p className="text-3xl font-extrabold text-red-600 font-display">500+</p>
+                                <p className="text-gray-500 text-sm">{t('pages.aboutStatSchools')}</p>
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <p className="text-3xl font-extrabold text-red-600 font-display">50k+</p>
+                                    <p className="text-gray-500 text-sm">{t('pages.aboutStatCandidates')}</p>
+                                </div>
+                            </div>
+                        </Reveal>
+
+                        {/* Values */}
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre mission</h2>
-                            <p className="text-gray-600 leading-relaxed mb-4">
-                                AutoEcoles Maroc a été créé pour simplifier la recherche d'une auto-école de qualité. Nous référençons les meilleures auto-écoles du pays, vérifiées et évaluées par de vrais élèves.
-                            </p>
-                            <p className="text-gray-600 leading-relaxed">
-                                Notre plateforme permet aux candidats de comparer les offres, lire des avis authentiques et contacter directement les écoles — le tout gratuitement.
-                            </p>
-                        </div>
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
-                            <Car className="w-12 h-12 text-orange-300 mx-auto mb-3" strokeWidth={1.25} />
-                            <p className="text-3xl font-bold text-orange-600">500+</p>
-                            <p className="text-gray-500 text-sm">Auto-écoles référencées</p>
-                            <div className="mt-4 pt-4 border-t border-gray-100">
-                                <p className="text-3xl font-bold text-orange-600">50k+</p>
-                                <p className="text-gray-500 text-sm">Candidats aidés</p>
+                            <Reveal className="text-center mb-10">
+                                <p className="eyebrow">{t('pages.aboutValuesEyebrow')}</p>
+                                <h2 className="text-2xl font-extrabold text-gray-900 font-display">{t('pages.aboutValuesTitle')}</h2>
+                            </Reveal>
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {VALUES.map((v, i) => (
+                                    <Reveal key={v.title} delay={i * 80} className="card-premium card-premium-hover p-6 text-center">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${v.color}`}>
+                                            <v.icon className="w-6 h-6" strokeWidth={1.75} />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 mb-2">{v.title}</h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed">{v.desc}</p>
+                                    </Reveal>
+                                ))}
                             </div>
                         </div>
-                    </section>
 
-                    {/* Values */}
-                    <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Nos valeurs</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {[
-                                { icon: CheckCircle2, color: 'bg-green-50 text-green-600', title: 'Fiabilité', desc: 'Toutes les auto-écoles sont vérifiées avant publication sur la plateforme.' },
-                                { icon: Eye, color: 'bg-orange-50 text-orange-600', title: 'Transparence', desc: 'Les avis sont publiés sans modification, bons ou mauvais — la vérité avant tout.' },
-                                { icon: Users, color: 'bg-blue-50 text-blue-600', title: 'Accessibilité', desc: 'Notre service de base est gratuit pour tous les candidats au permis.' },
-                            ].map(v => (
-                                <div key={v.title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center hover:border-orange-100 transition-colors">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${v.color}`}>
-                                        <v.icon className="w-6 h-6" strokeWidth={1.7} />
-                                    </div>
-                                    <h3 className="font-bold text-gray-900 mb-2">{v.title}</h3>
-                                    <p className="text-sm text-gray-500 leading-relaxed">{v.desc}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* CTA */}
-                    <section className="bg-orange-600 rounded-2xl text-white text-center p-10">
-                        <h2 className="text-2xl font-bold mb-3">Prêt à trouver votre auto-école ?</h2>
-                        <p className="text-orange-100 mb-6">Comparez des centaines d'auto-écoles près de chez vous</p>
-                        <Link href={route('search')}
-                            className="inline-block px-8 py-3 bg-white text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition-colors">
-                            Rechercher maintenant
-                        </Link>
-                    </section>
-                </div>
-
-                {/* Simple footer links */}
-                <div className="border-t border-gray-200 py-6 px-4">
-                    <div className="max-w-4xl mx-auto flex flex-wrap gap-4 justify-center text-sm text-gray-400">
-                        <Link href={route('home')} className="hover:text-orange-600">Accueil</Link>
-                        <Link href={route('faq')} className="hover:text-orange-600">FAQ</Link>
-                        <Link href={route('contact')} className="hover:text-orange-600">Contact</Link>
-                        <Link href={route('privacy')} className="hover:text-orange-600">Confidentialité</Link>
+                        {/* CTA */}
+                        <Reveal className="bg-gradient-to-r from-red-600 to-red-500 rounded-3xl text-white text-center p-10 shadow-glow">
+                            <h2 className="text-2xl font-extrabold mb-3 font-display">{t('pages.aboutCtaTitle')}</h2>
+                            <p className="text-red-100 mb-6">{t('pages.aboutCtaDesc')}</p>
+                            <Link href={route('search')}
+                                className="inline-block px-8 py-3 bg-white text-red-600 rounded-xl font-bold hover:bg-red-50 transition-colors">
+                                {t('pages.aboutCtaBtn')}
+                            </Link>
+                        </Reveal>
                     </div>
                 </div>
-            </div>
+            </PublicLayout>
         </>
     );
 }
