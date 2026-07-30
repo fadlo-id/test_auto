@@ -102,7 +102,8 @@ class AdminDashboardTest extends TestCase
                 ->has('heatmap')
                 ->has('recentSchools')
                 ->has('recentPayments')
-                ->has('pendingActions')
+                ->has('recentNotifications')
+                ->has('unreadNotifications')
             );
     }
 
@@ -131,7 +132,7 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($this->admin())
             ->get(route('admin.dashboard'))
-            ->assertInertia(fn ($p) => $p->where('pendingActions.schools', 2));
+            ->assertInertia(fn ($p) => $p->where('stats.pending_schools', 2));
     }
 
     public function test_pending_actions_reflects_pending_reviews(): void
@@ -146,7 +147,7 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($this->admin())
             ->get(route('admin.dashboard'))
-            ->assertInertia(fn ($p) => $p->where('pendingActions.reviews', 3));
+            ->assertInertia(fn ($p) => $p->where('stats.pending_reviews', 3));
     }
 
     // ── Revenue metrics ───────────────────────────────────────────────────────

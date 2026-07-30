@@ -49,8 +49,6 @@ class PermissionLeakTest extends TestCase
             'manage_plans'         => ['manage_plans', 'admin.plans.index'],
             'manage_analytics'     => ['manage_analytics', 'admin.analytics'],
             'manage_contacts'      => ['manage_contacts', 'admin.contact-requests.index'],
-            'manage_reports'       => ['manage_reports', 'admin.reports'],
-            'manage_logs'          => ['manage_logs', 'admin.logs'],
             'manage_settings'      => ['manage_settings', 'admin.settings'],
             'manage_newsletter'    => ['manage_newsletter', 'admin.newsletter.index'],
             'manage_credits'       => ['manage_credits', 'admin.credits.index'],

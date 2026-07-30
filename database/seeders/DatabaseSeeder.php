@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             PlanSeeder::class,
             AutoSchoolSeeder::class,
+            AdminDemoDataSeeder::class,
         ]);
     }
 }

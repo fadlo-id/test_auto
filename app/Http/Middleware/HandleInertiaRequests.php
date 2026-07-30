@@ -66,6 +66,7 @@ class HandleInertiaRequests extends Middleware
                     fn ($p) => [$p->key => ['label' => $p->label, 'group' => $p->group]]
                 )
                 : [],
+            'admin_unread_notifications' => $user?->isAdmin() ? $user->unreadNotifications()->count() : 0,
         ];
     }
 }

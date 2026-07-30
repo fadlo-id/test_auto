@@ -17,13 +17,16 @@ function StatusBadge({ user }) {
     return <span className="badge badge-green">Actif</span>;
 }
 
-function RoleBadge({ role }) {
+// "Type d'utilisateur" — the coarse account type (role column)
+function TypeBadge({ role }) {
     const cfg = {
+        super_admin:  'badge-purple',
         admin:        'badge-purple',
         school_owner: 'badge-blue',
         user:         'badge-gray',
     };
     const labels = {
+        super_admin:  'Super Admin',
         admin:        'Admin',
         school_owner: 'Propriétaire',
         user:         'Candidat',
@@ -31,6 +34,13 @@ function RoleBadge({ role }) {
     return (
         <span className={`badge ${cfg[role] ?? 'badge-gray'}`}>{labels[role] ?? role}</span>
     );
+}
+
+// "Rôle" — the fine-grained hierarchy tier (roleModel: Support / Modérateur / …), mostly
+// populated for admin-tier accounts. Falls back to a dash for regular users/owners.
+function RoleBadge({ roleModel }) {
+    if (!roleModel) return <span className="text-gray-300 dark:text-zinc-700 text-xs">—</span>;
+    return <span className="badge badge-orange">{roleModel.label}</span>;
 }
 
 export default function Users({ users, filters }) {
@@ -125,7 +135,7 @@ export default function Users({ users, filters }) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                                {['Utilisateur', 'Contact', 'Rôle', 'État', 'Inscrit le', 'Actions'].map((h) => (
+                                {['Nom', 'Email', "Type d'utilisateur", 'Rôle', 'Statut', 'Date de création', 'Actions'].map((h) => (
                                     <th key={h} className="table-cell text-left table-header">{h}</th>
                                 ))}
                             </tr>
@@ -145,7 +155,8 @@ export default function Users({ users, filters }) {
                                         <p className="text-gray-700 text-sm">{user.email}</p>
                                         {user.phone && <p className="text-gray-400 text-xs mt-0.5">{user.phone}</p>}
                                     </td>
-                                    <td className="px-4 py-3"><RoleBadge role={user.role} /></td>
+                                    <td className="px-4 py-3"><TypeBadge role={user.role} /></td>
+                                    <td className="px-4 py-3"><RoleBadge roleModel={user.role_model} /></td>
                                     <td className="px-4 py-3"><StatusBadge user={user} /></td>
                                     <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                                         {new Date(user.created_at).toLocaleDateString('fr-FR')}

@@ -302,17 +302,16 @@ class DashboardController extends Controller
                 ->latest()->take(6)->get(['id', 'auto_school_id', 'plan_id', 'amount', 'created_at']),
         ]);
 
-        $pendingActions = [
-            'schools'  => $stats['pending_schools'],
-            'reviews'  => $stats['pending_reviews'],
-            'contacts' => $stats['unread_contacts'],
-        ];
+        $user = auth()->user();
+        $recentNotifications = $user->notifications()->latest()->take(5)->get(['id', 'data', 'read_at', 'created_at']);
+        $unreadNotifications = $user->unreadNotifications()->count();
 
         return Inertia::render('Admin/Dashboard', compact(
             'stats', 'monthlyUsers', 'monthlyRevenue', 'monthlySchools',
             'subscriptionBreakdown', 'cityBreakdown',
             'topSchools', 'topCategories', 'heatmap',
-            'recentSchools', 'recentPayments', 'pendingActions'
+            'recentSchools', 'recentPayments',
+            'recentNotifications', 'unreadNotifications'
         ));
     }
 

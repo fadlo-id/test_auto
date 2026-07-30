@@ -10,7 +10,7 @@ import {
     DollarSign, TrendingUp, TrendingDown, BarChart3, CreditCard,
     Activity, Percent, RotateCcw, CheckCircle, Users, Building2,
     AlertTriangle, Download, ChevronDown, FileText, Table2, Printer,
-    RefreshCw, MapPin, Tag,
+    RefreshCw, MapPin, Tag, Plus, Bell, ClipboardCheck, Flag, Search,
 } from 'lucide-react';
 
 // ─── Palette ────────────────────────────────────────────────────────────────
@@ -247,7 +247,7 @@ export default function Dashboard({
     subscriptionBreakdown = [], cityBreakdown = [],
     topSchools = [], topCategories = [], heatmap = [],
     recentSchools = [], recentPayments = [],
-    pendingActions = {},
+    recentNotifications = [], unreadNotifications = 0,
 }) {
     const [period, setPeriod]       = useState('12M');
     const [live, setLive]           = useState(null);
@@ -382,6 +382,29 @@ export default function Dashboard({
                     )}
                 </div>
             )}
+
+            {/* ── Actions rapides ──────────────────────────────────── */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6 print:hidden">
+                {[
+                    { label: 'Nouvelle auto-école', icon: Plus,           href: route('admin.auto-schools.index'),        accent: 'orange' },
+                    { label: 'Candidatures',        icon: ClipboardCheck, href: route('admin.school-applications.index'), accent: 'blue'   },
+                    { label: 'Utilisateurs',        icon: Users,          href: route('admin.users.index'),               accent: 'purple' },
+                    { label: 'Paiements',           icon: CreditCard,     href: route('admin.payments.index'),            accent: 'green'  },
+                    { label: 'Signalements',        icon: Flag,           href: route('admin.signalements.index'),        accent: 'red'    },
+                    { label: 'Recherche',           icon: Search,         href: route('admin.schools-search.index'),      accent: 'amber'  },
+                ].map(({ label, icon: Icon, href, accent }) => {
+                    const a = ACCENT[accent];
+                    return (
+                        <Link key={label} href={href}
+                            className={`flex flex-col items-center justify-center gap-2 bg-white dark:bg-zinc-900 rounded-2xl border ${a.ring} shadow-sm hover:shadow-md transition-shadow p-4 text-center`}>
+                            <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center`}>
+                                <Icon className={`w-4 h-4 ${a.icon}`} />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300 leading-tight">{label}</span>
+                        </Link>
+                    );
+                })}
+            </div>
 
             {/* ── KPI Row 1 — Revenue ─────────────────────────────── */}
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-3">
@@ -599,7 +622,38 @@ export default function Dashboard({
             </div>
 
             {/* ── Recent feed ──────────────────────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                {/* Notifications importantes */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+                        <h3 className="font-bold text-gray-900 dark:text-zinc-50 flex items-center gap-1.5">
+                            <Bell className="w-4 h-4 text-orange-500" />Notifications
+                            {unreadNotifications > 0 && (
+                                <span className="bg-orange-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadNotifications}</span>
+                            )}
+                        </h3>
+                        <Link href={route('admin.notifications.index')} className="text-xs text-orange-600 hover:underline">Voir tout →</Link>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {recentNotifications.length === 0 ? (
+                            <p className="text-center text-gray-300 dark:text-zinc-600 py-10 text-sm">Aucune notification</p>
+                        ) : recentNotifications.map(n => {
+                            const d = typeof n.data === 'string' ? JSON.parse(n.data) : n.data;
+                            return (
+                                <Link key={n.id} href={d?.url ?? route('admin.notifications.index')}
+                                    className={`flex items-start gap-3 px-5 py-3 hover:bg-gray-50/60 transition-colors ${!n.read_at ? 'bg-orange-50/40 dark:bg-orange-500/[0.04]' : ''}`}>
+                                    <span className="text-lg leading-none flex-shrink-0 mt-0.5">{d?.icon ?? '🔔'}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50 truncate">{d?.title ?? 'Notification'}</p>
+                                        <p className="text-[11px] text-gray-400 dark:text-zinc-500 truncate">{d?.body}</p>
+                                    </div>
+                                    {!n.read_at && <span className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Recent payments */}
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">

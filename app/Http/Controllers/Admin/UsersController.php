@@ -16,6 +16,7 @@ class UsersController extends Controller
     public function index(Request $request): Response
     {
         $users = User::query()
+            ->with('roleModel:id,name,label,color')
             ->when($request->search, fn ($q, $s) => $q->where('name', 'like', "%$s%")->orWhere('email', 'like', "%$s%"))
             ->when($request->role, fn ($q, $r) => $q->where('role', $r))
             ->when($request->status === 'active',   fn ($q) => $q->where('is_active', true)->where('status', 0))

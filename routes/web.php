@@ -19,8 +19,6 @@ use App\Http\Controllers\Admin\SubscriptionsController as AdminSubscriptions;
 use App\Http\Controllers\Admin\CategoriesController as AdminCategories;
 use App\Http\Controllers\Admin\PlansController as AdminPlans;
 use App\Http\Controllers\Admin\ContactRequestsController as AdminContacts;
-use App\Http\Controllers\Admin\ReportsController as AdminReports;
-use App\Http\Controllers\Admin\LogsController as AdminLogs;
 use App\Http\Controllers\Admin\SystemSettingsController as AdminSystemSettings;
 use App\Http\Controllers\Admin\NewsletterController as AdminNewsletter;
 use App\Http\Controllers\Admin\ServicesController as AdminServices;
@@ -28,13 +26,14 @@ use App\Http\Controllers\Admin\CreditManagementController as AdminCredits;
 use App\Http\Controllers\Admin\AdminsController;
 use App\Http\Controllers\Admin\RolesController as AdminRoles;
 use App\Http\Controllers\Admin\PermissionsController as AdminPermissions;
-use App\Http\Controllers\Admin\AuditLogsController as AdminAuditLogs;
 use App\Http\Controllers\Admin\StubController as AdminStub;
 use App\Http\Controllers\Admin\ArticlesController as AdminArticles;
 use App\Http\Controllers\Admin\CouponsController as AdminCoupons;
 use App\Http\Controllers\Admin\RegionsController as AdminRegions;
 use App\Http\Controllers\Admin\AdsController as AdminAds;
 use App\Http\Controllers\Admin\SignalementsController as AdminSignalements;
+use App\Http\Controllers\Admin\SchoolSearchController as AdminSchoolSearch;
+use App\Http\Controllers\Admin\NotificationsController as AdminNotifications;
 use App\Http\Controllers\Admin\Crm\CrmDashboardController;
 use App\Http\Controllers\Admin\Crm\CrmProspectController;
 use App\Http\Controllers\Admin\Crm\CrmPipelineController;
@@ -154,13 +153,20 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/{user}/ban',          [AdminUsers::class, 'ban'])->name('users.ban');
             Route::post('/users/{user}/unban',        [AdminUsers::class, 'unban'])->name('users.unban');
             Route::get('/users/export',               [AdminUsers::class, 'export'])->name('users.export');
-            Route::get('/instructors',                [AdminStub::class, 'instructors'])->name('instructors.index');
-            Route::get('/students',                   [AdminStub::class, 'students'])->name('students.index');
         });
+
+        // Notifications — personal admin inbox, accessible to every admin (no permission gate)
+        Route::get('/notifications',                     [AdminNotifications::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{id}/read',           [AdminNotifications::class, 'markRead'])->name('notifications.read');
+        Route::post('/notifications/read-all',            [AdminNotifications::class, 'markAllRead'])->name('notifications.read-all');
+        Route::delete('/notifications/{id}',              [AdminNotifications::class, 'destroy'])->name('notifications.destroy');
 
         // Schools
         Route::middleware('permission:manage_schools')->group(function () {
             Route::get('/auto-schools',                              [AdminSchools::class, 'index'])->name('auto-schools.index');
+            Route::post('/auto-schools',                             [AdminSchools::class, 'store'])->name('auto-schools.store');
+            Route::put('/auto-schools/{school}',                     [AdminSchools::class, 'update'])->name('auto-schools.update');
+            Route::get('/schools-search',                            [AdminSchoolSearch::class, 'index'])->name('schools-search.index');
             Route::post('/auto-schools/{school}/approve',            [AdminSchools::class, 'approve'])->name('auto-schools.approve');
             Route::post('/auto-schools/{school}/reject',             [AdminSchools::class, 'reject'])->name('auto-schools.reject');
             Route::post('/auto-schools/{school}/activate',           [AdminSchools::class, 'activate'])->name('auto-schools.activate');
@@ -236,9 +242,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/analytics',                 [AdminAnalytics::class, 'index'])->name('analytics');
             Route::get('/analytics/export/{format}',  [AdminAnalytics::class, 'export'])
                 ->whereIn('format', ['pdf', 'excel', 'csv'])->name('analytics.export');
-            Route::get('/revenue',             [AdminStub::class, 'revenue'])->name('revenue');
-            Route::get('/stats/users',         [AdminStub::class, 'statsUsers'])->name('stats.users');
-            Route::get('/stats/schools',       [AdminStub::class, 'statsSchools'])->name('stats.schools');
         });
 
         // Contact Requests
@@ -249,24 +252,11 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/contact-requests/{contactRequest}',       [AdminContacts::class, 'destroy'])->name('contact-requests.destroy');
         });
 
-        // Reports
-        Route::middleware('permission:manage_reports')->group(function () {
-            Route::get('/reports', [AdminReports::class, 'index'])->name('reports');
-        });
-
-        // Logs
-        Route::middleware('permission:manage_logs')->group(function () {
-            Route::get('/logs',        [AdminLogs::class, 'index'])->name('logs');
-            Route::post('/logs/clear', [AdminLogs::class, 'clear'])->name('logs.clear');
-        });
-
         // Settings
         Route::middleware('permission:manage_settings')->group(function () {
             Route::get('/settings',        [AdminSystemSettings::class, 'index'])->name('settings');
             Route::put('/settings',        [AdminSystemSettings::class, 'update'])->name('settings.update');
-            Route::get('/configuration',   [AdminStub::class, 'configuration'])->name('configuration');
             Route::get('/roles',           [AdminRoles::class, 'index'])->name('roles.index');
-            Route::get('/backups',         [AdminStub::class, 'backups'])->name('backups');
             Route::get('/ads',             [AdminAds::class, 'index'])->name('ads.index');
             Route::post('/ads',            [AdminAds::class, 'store'])->name('ads.store');
             Route::put('/ads/{ad}',        [AdminAds::class, 'update'])->name('ads.update');
@@ -365,7 +355,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{user}/sync-permissions',      [AdminsController::class, 'syncPermissions'])->name('sync-permissions');
         });
 
-        // Role / permission management + audit log (super_admin only)
+        // Role / permission management (super_admin only)
         Route::middleware('super_admin')->group(function () {
             Route::post('/roles',                          [AdminRoles::class, 'store'])->name('roles.store');
             Route::put('/roles/{role}',                     [AdminRoles::class, 'update'])->name('roles.update');
@@ -375,8 +365,6 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/permissions',                     [AdminPermissions::class, 'store'])->name('permissions.store');
             Route::put('/permissions/{permission}',         [AdminPermissions::class, 'update'])->name('permissions.update');
             Route::delete('/permissions/{permission}',      [AdminPermissions::class, 'destroy'])->name('permissions.destroy');
-
-            Route::get('/audit-logs',                       [AdminAuditLogs::class, 'index'])->name('audit-logs.index');
         });
     });
 

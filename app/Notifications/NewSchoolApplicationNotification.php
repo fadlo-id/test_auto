@@ -19,7 +19,7 @@ class NewSchoolApplicationNotification extends Notification implements ShouldQue
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -32,5 +32,16 @@ class NewSchoolApplicationNotification extends Notification implements ShouldQue
             ->line("Propriétaire : {$this->application->owner_name}")
             ->action('Examiner la candidature', route('admin.school-applications.show', $this->application))
             ->salutation('L\'équipe AutoEcoles Maroc');
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'type'  => 'school_application',
+            'title' => 'Nouvelle candidature auto-école',
+            'body'  => "{$this->application->school_name} — {$this->application->city}",
+            'url'   => route('admin.school-applications.show', $this->application),
+            'icon'  => '🏫',
+        ];
     }
 }
