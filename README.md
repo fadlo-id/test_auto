@@ -1,5 +1,7 @@
 # test_auto
 
+> **Note :** ceci est une version personnelle et publique du projet AutoEcoles Maroc, développée et maintenue indépendamment par son auteur. Elle est distincte du code réalisé dans le cadre d'un stage en entreprise (J2HB) sur un projet au concept proche — ce dépôt ne contient aucun code ni donnée provenant de ce stage privé, et ne doit pas être présenté comme en étant la version finale.
+
 ------------------------------------------------------------
 
 <div align="center">
@@ -141,6 +143,8 @@ No public demo deployment is currently linked from this repository. Run the proj
 ---
 
 ## 🏗 Architecture
+
+![Architecture — AutoEcoles Maroc](docs/architecture-overview.png)
 
 - **Inertia monolith** — Laravel controllers return `Inertia::render()` responses consumed directly by React pages; there is no decoupled SPA/API to keep in sync.
 - **Role-based routing** — `super_admin`, `admin`, `school_owner` and `user` each get their own middleware-guarded route group and dashboard.
